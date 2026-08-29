@@ -1,38 +1,197 @@
-async function submitId() {
-    const fileInput = document.getElementById('idFile');
-    const msgEl = document.getElementById('idMsg');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Once P2P Telegram Mini App</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 440px; background: #1e293b; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; margin-top: 20px; }
+        .logo-badge { background: #10b981; color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 15px; }
+        h2 { margin: 0 0 8px 0; font-size: 22px; color: #ffffff; }
+        p.subtitle { font-size: 13px; color: #94a3b8; margin-top: 0; line-height: 1.4; }
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-top: 14px; margin-bottom: 6px; letter-spacing: 0.5px; }
+        input { width: 100%; padding: 12px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 14px; box-sizing: border-box; }
+        input:focus { outline: none; border-color: #10b981; }
+        button { width: 100%; padding: 14px; background: #10b981; color: #0f172a; border: none; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
+        button:hover { background: #059669; color: #fff; }
+        .pending-box { text-align: center; padding: 40px 20px; }
+        .spinner { font-size: 40px; margin-bottom: 15px; }
+        .success { color: #10b981; font-weight: bold; font-size: 13px; margin-top: 10px; }
+        .error { color: #ef4444; font-weight: bold; font-size: 13px; margin-top: 10px; }
+    </style>
+</head>
+<body>
 
-    if (!fileInput.files || fileInput.files.length === 0) {
-        msgEl.className = 'error';
-        msgEl.innerText = 'Please select a clear ID image before proceeding.';
-        return; // Stops execution completely if no file is selected
-    }
+<div class="container">
+    <div class="logo-badge">P Once P2P</div>
 
-    const formData = new FormData();
-    formData.append('username', activeUsername);
-    formData.append('idImage', fileInput.files[0]);
+    <!-- VIEW 1: REGISTRATION -->
+    <div id="registerView">
+        <h2>Create Account</h2>
+        <p class="subtitle">Enter your details to register for Once P2P.</p>
 
-    msgEl.className = '';
-    msgEl.innerText = 'Uploading ID... Please wait.';
+        <label>Nickname / Username</label>
+        <input type="text" id="username" placeholder="e.g. CryptoTrader99">
 
-    try {
-        const res = await fetch(`${API_URL}/api/submit-id`, { 
-            method: 'POST', 
-            body: formData 
+        <label>Legal Full Name (Matching ID)</label>
+        <input type="text" id="fullName" placeholder="e.g. Abebe Kebede">
+
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="name@example.com">
+
+        <label>Phone Number</label>
+        <input type="text" id="phone" placeholder="+251 9XXXXXXXX">
+
+        <label>Binance UID</label>
+        <input type="text" id="binanceUid" placeholder="Enter your Binance UID">
+
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••">
+
+        <button onclick="registerUser()">Register & Proceed</button>
+        <p id="regMsg"></p>
+    </div>
+
+    <!-- VIEW 2: ID UPLOAD -->
+    <div id="uploadView" style="display:none;">
+        <h2>Verify Your Identity</h2>
+        <p class="subtitle">Upload your legal ID document to unlock the P2P marketplace.</p>
+        
+        <label>Select ID Image (Front / Passport)</label>
+        <input type="file" id="idFile">
+        
+        <button onclick="submitId()">Submit ID for Review</button>
+        <p id="idMsg"></p>
+    </div>
+
+    <!-- VIEW 3: BLOCKED PENDING REVIEW SCREEN -->
+    <div id="pendingView" class="pending-box" style="display:none;">
+        <div class="spinner">⏳</div>
+        <h2>Review in Progress</h2>
+        <p class="subtitle">Your ID document has been submitted successfully. Access to the P2P marketplace and trading features is locked until an administrator reviews and approves your account.</p>
+        <button onclick="checkStatus()" style="background: #334155; color: #fff;">Check Verification Status</button>
+    </div>
+
+    <!-- VIEW 4: MARKETPLACE (UNLOCKED ONLY WHEN VERIFIED) -->
+    <div id="marketplaceView" style="display:none;">
+        <h2>P2P Marketplace Unlocked</h2>
+        <p class="subtitle">Welcome! Your account is fully verified.</p>
+        
+        <label>Set Withdrawal Password</label>
+        <input type="password" id="withdrawPin" placeholder="Enter 6-digit withdrawal PIN">
+        <button onclick="setWithdrawPassword()">Save Withdrawal Password</button>
+        <p id="withdrawMsg"></p>
+    </div>
+</div>
+
+<script>
+    const API_URL = ''; 
+    let activeUsername = localStorage.getItem('p2p_username') || '';
+
+    // On load, check if user is already registered and their status
+    window.onload = async () => {
+        if (activeUsername) {
+            await checkStatus();
+        }
+    };
+
+    async function registerUser() {
+        const username = document.getElementById('username').value;
+        const fullName = document.getElementById('fullName').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const binanceUid = document.getElementById('binanceUid').value;
+        const password = document.getElementById('password').value;
+        const msgEl = document.getElementById('regMsg');
+
+        const res = await fetch(`${API_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, fullName, email, phone, binanceUid, password })
         });
         const data = await res.json();
         
         if (res.ok) {
-            msgEl.className = 'success';
-            msgEl.innerText = data.message;
-            // Lock the screen so they cannot bypass
-            document.getElementById('idFile').disabled = true;
+            activeUsername = data.username;
+            localStorage.setItem('p2p_username', activeUsername);
+            document.getElementById('registerView').style.display = 'none';
+            document.getElementById('uploadView').style.display = 'block';
         } else {
             msgEl.className = 'error';
-            msgEl.innerText = data.error || 'Upload failed. Try again.';
+            msgEl.innerText = data.error;
         }
-    } catch (err) {
-        msgEl.className = 'error';
-        msgEl.innerText = 'Network error during upload. Please try again.';
     }
-}
+
+    async function submitId() {
+        const fileInput = document.getElementById('idFile');
+        const msgEl = document.getElementById('idMsg');
+
+        if (!fileInput.files[0]) {
+            msgEl.className = 'error';
+            msgEl.innerText = 'Please select an ID image file first.';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('username', activeUsername);
+        formData.append('idImage', fileInput.files[0]);
+
+        const res = await fetch(`${API_URL}/api/submit-id`, { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        if (res.ok) {
+            document.getElementById('uploadView').style.display = 'none';
+            document.getElementById('pendingView').style.display = 'block';
+        } else {
+            msgEl.className = 'error';
+            msgEl.innerText = data.error;
+        }
+    }
+
+    async function checkStatus() {
+        if (!activeUsername) return;
+        try {
+            const res = await fetch(`${API_URL}/api/marketplace?username=${activeUsername}`);
+            const data = await res.json();
+
+            if (res.ok) {
+                document.getElementById('registerView').style.display = 'none';
+                
+                if (data.isVerified) {
+                    document.getElementById('uploadView').style.display = 'none';
+                    document.getElementById('pendingView').style.display = 'none';
+                    document.getElementById('marketplaceView').style.display = 'block';
+                } else {
+                    document.getElementById('uploadView').style.display = 'none';
+                    document.getElementById('pendingView').style.display = 'block';
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function setWithdrawPassword() {
+        const withdrawPassword = document.getElementById('withdrawPin').value;
+        const msgEl = document.getElementById('withdrawMsg');
+
+        const res = await fetch(`${API_URL}/api/wallet/set-withdraw-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: activeUsername, withdrawPassword })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            msgEl.className = 'success';
+            msgEl.innerText = data.message;
+        } else {
+            msgEl.className = 'error';
+            msgEl.innerText = data.error;
+        }
+    }
+</script>
+
+</body>
+</html>
