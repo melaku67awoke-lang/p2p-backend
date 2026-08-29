@@ -91,6 +91,33 @@ app.post('/api/admin/approve-user', async (req, res) => {
   }
 });
 
+// Wallet Deposit Endpoint (Only for verified users)
+app.post('/api/wallet/deposit', async (req, res) => {
+  try {
+    const { username, amount } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid deposit amount' });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({ error: 'Account not verified. Complete ID review to deposit funds.' });
+    }
+
+    user.balance += Number(amount);
+    await user.save();
+
+    res.json({ message: 'Deposit successful!', newBalance: user.balance });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Marketplace / Services Endpoint
 app.get('/api/marketplace', async (req, res) => {
   try {
