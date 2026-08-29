@@ -1,22 +1,27 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const multer = require('multer'); // For handling ID image uploads
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Configure multer to store uploaded ID images temporarily in memory
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB Atlas successfully!'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// Define User Schema & Model with Verification Status
+// User Schema with strict verification locking
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   balance: { type: Number, default: 0 },
-  isVerified: { type: Boolean, default: false }, // ID review status
-  idDocumentUrl: { type: String, default: '' },   // Submitted ID reference
+  isVerified: { type: Boolean, default: false }, // Locked by default
+  idImageName: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -36,7 +41,7 @@ app.post('/api/register', async (req, res) => {
     await newUser.save();
 
     res.status(201).json({ 
-      message: 'User registered successfully! Please submit your ID for review.', 
+      message: 'Registered successfully. Please upload your ID to access services.', 
       username: newUser.username,
       isVerified: false 
     });
@@ -45,27 +50,31 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Submit ID for Review Endpoint
-app.post('/api/submit-id', async (req, res) => {
+// Submit ID Endpoint (Accepts actual image file upload)
+app.post('/api/submit-id', upload.single('idImage'), async (req, res) => {
   try {
-    const { username, idDocumentUrl } = req.body;
+    const { username } = req.body;
     const user = await User.findOne({ username });
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    user.idDocumentUrl = idDocumentUrl;
-    // Note: isVerified remains false until manual or automated review approval
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please upload an ID image file' });
+    }
+
+    user.idImageName = req.file.originalname;
+    user.isVerified = false; // Remains false until admin/system approval
     await user.save();
 
-    res.json({ message: 'ID submitted successfully. Under review.' });
+    res.json({ message: 'ID uploaded successfully! Pending review. Services remain locked.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Marketplace / Services Endpoint (Blocked if not verified)
+// Marketplace / Services Endpoint (Strictly blocks unverified users)
 app.get('/api/marketplace', async (req, res) => {
   try {
     const { username } = req.query;
@@ -75,14 +84,14 @@ app.get('/api/marketplace', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    if (!user.isVerified) {
+    if (user.isVerified !== true) {
       return res.status(403).json({ 
-        error: 'Access denied. Your ID review is still pending.', 
+        error: 'Access denied. Your ID is still under review or not verified yet.', 
         isVerified: false 
       });
     }
 
-    res.json({ message: 'Welcome to the P2P Marketplace and Wallet services!', balance: user.balance });
+    res.json({ message: 'Welcome to the P2P Marketplace!', balance: user.balance });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
