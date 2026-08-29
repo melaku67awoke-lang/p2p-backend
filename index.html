@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Once P2P - Create Account</title>
+    <title>Once P2P - Secure Escrow Marketplace</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 440px; background: #1e293b; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        .container { width: 100%; max-width: 460px; background: #1e293b; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .logo-badge { background: #10b981; color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
-        .step-indicator { font-size: 13px; color: #94a3b8; }
+        .nav-links { font-size: 13px; color: #38bdf8; cursor: pointer; text-decoration: underline; }
         h2 { margin: 0 0 8px 0; font-size: 22px; color: #ffffff; }
         p.subtitle { font-size: 13px; color: #94a3b8; margin-top: 0; line-height: 1.4; }
         label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-top: 14px; margin-bottom: 6px; letter-spacing: 0.5px; }
@@ -18,9 +18,12 @@
         .warning-text { font-size: 11px; color: #f59e0b; margin-top: 4px; display: block; }
         button { width: 100%; padding: 14px; background: #10b981; color: #0f172a; border: none; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
         button:hover { background: #059669; color: #fff; }
+        .secondary-btn { background: #334155; color: #f8fafc; margin-top: 10px; }
+        .secondary-btn:hover { background: #475569; }
         .section-card { margin-top: 25px; border-top: 1px solid #334155; padding-top: 20px; }
         .success { color: #10b981; font-weight: bold; font-size: 13px; margin-top: 10px; }
         .error { color: #ef4444; font-weight: bold; font-size: 13px; margin-top: 10px; }
+        .trade-card { background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid #334155; }
     </style>
 </head>
 <body>
@@ -28,39 +31,51 @@
 <div class="container">
     <div class="header">
         <div class="logo-badge">P Once P2P</div>
-        <div class="step-indicator">Step 1 of 2</div>
+        <div class="nav-links" id="authSwitch" onclick="toggleAuthMode()">Already have an account? Login</div>
     </div>
 
-    <h2>Create Your Account</h2>
-    <p class="subtitle">Enter your details accurately. Your legal full name must match your ID documents.</p>
+    <div id="registerView">
+        <h2>Create Your Account</h2>
+        <p class="subtitle">Enter your details accurately. Your legal full name must match your ID documents.</p>
 
-    <!-- Registration Form -->
-    <div id="registerSection">
         <label>Nickname</label>
-        <input type="text" id="username" placeholder="e.g. CryptoTrader99">
+        <input type="text" id="regUsername" placeholder="e.g. CryptoTrader99">
 
         <label>Legal Full Name (Matching ID)</label>
-        <input type="text" id="fullName" placeholder="e.g. Abebe Kebede">
+        <input type="text" id="regFullName" placeholder="e.g. Abebe Kebede">
         <span class="warning-text">⚠️ Cannot be changed after submission</span>
 
         <label>Email Address</label>
-        <input type="email" id="email" placeholder="name@example.com">
+        <input type="email" id="regEmail" placeholder="name@example.com">
 
         <label>Phone Number</label>
-        <input type="text" id="phone" placeholder="+251 9XXXXXXXX">
+        <input type="text" id="regPhone" placeholder="+251 9XXXXXXXX">
 
         <label>Pre-March 2025 Verified Binance ID</label>
-        <input type="text" id="binanceUid" placeholder="Enter your Binance UID">
+        <input type="text" id="regBinanceUid" placeholder="Enter your Binance UID">
 
         <label>Create Password</label>
-        <input type="password" id="password" placeholder="••••••••">
+        <input type="password" id="regPassword" placeholder="••••••••">
 
         <button onclick="registerUser()">Continue to Document Upload →</button>
         <p id="regMsg"></p>
     </div>
 
-    <!-- Document Upload Section (Hidden until registration) -->
-    <div id="uploadSection" class="section-card" style="display:none;">
+    <div id="loginView" style="display:none;">
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Log in to manage your wallet, trades, and verification status.</p>
+
+        <label>Nickname / Username</label>
+        <input type="text" id="loginUsername" placeholder="Your Nickname">
+
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+
+        <button onclick="loginUser()">Login to Dashboard</button>
+        <p id="loginMsg"></p>
+    </div>
+
+    <div id="uploadView" class="section-card" style="display:none;">
         <h2>Upload ID Document</h2>
         <p class="subtitle">Please upload a clear picture of your legal ID to unlock trading features.</p>
         
@@ -70,26 +85,70 @@
         <button onclick="submitId()">Submit ID for Review</button>
         <p id="idMsg"></p>
     </div>
+
+    <div id="dashboardView" style="display:none;">
+        <h2>User Dashboard</h2>
+        <p class="subtitle">Logged in as: <b id="userBadge" style="color:#38bdf8;"></b></p>
+        
+        <div style="background:#0f172a; padding:15px; border-radius:8px; border:1px solid #334155; margin-top:15px;">
+            <p style="margin:0; font-size:12px; color:#94a3b8;">WALLET BALANCE</p>
+            <h3 style="margin:5px 0 0 0; color:#10b981;" id="walletBalance">0.00</h3>
+        </div>
+
+        <div class="section-card">
+            <h3>Deposit Funds (Verified Users Only)</h3>
+            <label>Amount</label>
+            <input type="number" id="depositAmount" placeholder="Enter amount">
+            <button onclick="depositFunds()">Deposit Now</button>
+            <p id="depositMsg"></p>
+        </div>
+
+        <div class="section-card">
+            <h3>Create Sell Offer (Escrow)</h3>
+            <label>Amount to Sell</label>
+            <input type="number" id="tradeAmount" placeholder="Amount">
+            <label>Price per Unit</label>
+            <input type="number" id="tradePrice" placeholder="Price">
+            <button onclick="createTrade()">Lock in Escrow & Publish</button>
+            <p id="tradeMsg"></p>
+        </div>
+
+        <div class="section-card">
+            <h3>Open Marketplace Trades</h3>
+            <button class="secondary-btn" onclick="loadMarketplace()">Refresh Open Trades</button>
+            <div id="marketplaceList"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-    const API_URL = ''; // Same domain (Render backend)
-    let registeredUsername = '';
+    const API_URL = ''; 
+    let currentUsername = '';
+
+    function toggleAuthMode() {
+        const regView = document.getElementById('registerView');
+        const loginView = document.getElementById('loginView');
+        const switchText = document.getElementById('authSwitch');
+
+        if (regView.style.display === 'none') {
+            regView.style.display = 'block';
+            loginView.style.display = 'none';
+            switchText.innerText = 'Already have an account? Login';
+        } else {
+            regView.style.display = 'none';
+            loginView.style.display = 'block';
+            switchText.innerText = "Don't have an account? Register";
+        }
+    }
 
     async function registerUser() {
-        const username = document.getElementById('username').value;
-        const fullName = document.getElementById('fullName').value;
-        const email = document.getElementById('email').value;
-        const phone = document.getElementById('phone').value;
-        const binanceUid = document.getElementById('binanceUid').value;
-        const password = document.getElementById('password').value;
+        const username = document.getElementById('regUsername').value;
+        const fullName = document.getElementById('regFullName').value;
+        const email = document.getElementById('regEmail').value;
+        const phone = document.getElementById('regPhone').value;
+        const binanceUid = document.getElementById('regBinanceUid').value;
+        const password = document.getElementById('regPassword').value;
         const msgEl = document.getElementById('regMsg');
-
-        if (!username || !fullName || !password) {
-            msgEl.className = 'error';
-            msgEl.innerText = 'Please fill in all required fields.';
-            return;
-        }
 
         const res = await fetch(`${API_URL}/api/register`, {
             method: 'POST',
@@ -99,14 +158,37 @@
         const data = await res.json();
         
         if (res.ok) {
-            registeredUsername = data.username;
+            currentUsername = data.username;
             msgEl.className = 'success';
             msgEl.innerText = data.message;
-            // Switch to document upload section
-            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('registerView').style.display = 'none';
+            document.getElementById('uploadView').style.display = 'block';
         } else {
             msgEl.className = 'error';
             msgEl.innerText = data.error;
+        }
+    }
+
+    async function loginUser() {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        const msgEl = document.getElementById('loginMsg');
+
+        // Simple fetch to check user existence and load dashboard data
+        const res = await fetch(`${API_URL}/api/marketplace?username=${username}`);
+        const data = await res.json();
+
+        if (res.ok || data.balance !== undefined) {
+            currentUsername = username;
+            document.getElementById('loginView').style.display = 'none';
+            document.querySelector('.header').style.display = 'none';
+            document.getElementById('dashboardView').style.display = 'block';
+            document.getElementById('userBadge').innerText = username;
+            document.getElementById('walletBalance').innerText = data.balance || 0;
+            loadMarketplace();
+        } else {
+            msgEl.className = 'error';
+            msgEl.innerText = data.error || 'Login failed. Check your username.';
         }
     }
 
@@ -121,21 +203,87 @@
         }
 
         const formData = new FormData();
-        formData.append('username', registeredUsername);
+        formData.append('username', currentUsername);
         formData.append('idImage', fileInput.files[0]);
 
-        const res = await fetch(`${API_URL}/api/submit-id`, {
-            method: 'POST',
-            body: formData
-        });
+        const res = await fetch(`${API_URL}/api/submit-id`, { method: 'POST', body: formData });
         const data = await res.json();
         
         if (res.ok) {
             msgEl.className = 'success';
-            msgEl.innerText = data.message + ' You can now await admin review.';
+            msgEl.innerText = data.message + ' You can now log in once approved by admin.';
         } else {
             msgEl.className = 'error';
             msgEl.innerText = data.error;
+        }
+    }
+
+    async function depositFunds() {
+        const amount = document.getElementById('depositAmount').value;
+        const msgEl = document.getElementById('depositMsg');
+
+        const res = await fetch(`${API_URL}/api/wallet/deposit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUsername, amount })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            msgEl.className = 'success';
+            msgEl.innerText = data.message;
+            document.getElementById('walletBalance').innerText = data.newBalance;
+        } else {
+            msgEl.className = 'error';
+            msgEl.innerText = data.error;
+        }
+    }
+
+    async function createTrade() {
+        const amount = document.getElementById('tradeAmount').value;
+        const price = document.getElementById('tradePrice').value;
+        const msgEl = document.getElementById('tradeMsg');
+
+        const res = await fetch(`${API_URL}/api/trades/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUsername, amount, price })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            msgEl.className = 'success';
+            msgEl.innerText = data.message;
+            loadMarketplace();
+        } else {
+            msgEl.className = 'error';
+            msgEl.innerText = data.error;
+        }
+    }
+
+    async function loadMarketplace() {
+        const listEl = document.getElementById('marketplaceList');
+        listEl.innerHTML = 'Loading trades...';
+
+        try {
+            const res = await fetch(`${API_URL}/api/trades/open`);
+            const trades = await res.json();
+            
+            if (trades.length === 0) {
+                listEl.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No open trades available right now.</p>';
+                return;
+            }
+
+            let html = '';
+            trades.forEach(trade => {
+                html += `<div class="trade-card">
+                    <b>Seller:</b> ${trade.seller}<br>
+                    <b>Amount:</b> ${trade.amount} | <b>Price:</b> ${trade.price}
+                </div>`;
+            });
+            listEl.innerHTML = html;
+        } catch (err) {
+            listEl.innerHTML = '<p class="error">Failed to load marketplace.</p>';
         }
     }
 </script>
