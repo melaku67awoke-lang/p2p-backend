@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname)); // Serves index.html automatically
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -25,12 +26,11 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Trade Schema for P2P Escrow
 const tradeSchema = new mongoose.Schema({
   seller: { type: String, required: true },
   buyer: { type: String, default: '' },
   amount: { type: Number, required: true },
-  price: { type: Number, required: true }, // e.g., fiat price per unit
+  price: { type: Number, required: true },
   status: { type: String, enum: ['open', 'in-progress', 'completed', 'cancelled'], default: 'open' },
   createdAt: { type: Date, default: Date.now }
 });
@@ -103,7 +103,7 @@ app.post('/api/wallet/deposit', async (req, res) => {
   }
 });
 
-// Create P2P Sell Offer (Locks funds in escrow)
+// Create P2P Sell Offer
 app.post('/api/trades/create', async (req, res) => {
   try {
     const { username, amount, price } = req.body;
@@ -117,7 +117,6 @@ app.post('/api/trades/create', async (req, res) => {
       return res.status(400).json({ error: 'Insufficient balance to escrow this amount' });
     }
 
-    // Deduct from seller balance (move to escrow)
     user.balance -= Number(amount);
     await user.save();
 
@@ -140,7 +139,7 @@ app.get('/api/trades/open', async (req, res) => {
   }
 });
 
-// Complete Trade (Releases escrow to buyer)
+// Complete Trade
 app.post('/api/trades/complete', async (req, res) => {
   try {
     const { tradeId, buyerUsername } = req.body;
@@ -159,7 +158,6 @@ app.post('/api/trades/complete', async (req, res) => {
     trade.status = 'completed';
     await trade.save();
 
-    // Release funds to buyer's wallet
     buyer.balance += Number(trade.amount);
     await buyer.save();
 
@@ -167,10 +165,6 @@ app.post('/api/trades/complete', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-app.get('/', (req, res) => {
-  res.send('P2P Backend with Escrow is running successfully! 🚀');
 });
 
 app.listen(PORT, () => {
