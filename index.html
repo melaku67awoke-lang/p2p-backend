@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Once P2P - Secure Escrow Marketplace</title>
+    <title>Once P2P Telegram Mini App</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 460px; background: #1e293b; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        .container { width: 100%; max-width: 440px; background: #1e293b; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .logo-badge { background: #10b981; color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
-        .nav-links { font-size: 13px; color: #38bdf8; cursor: pointer; text-decoration: underline; }
+        .step-indicator { font-size: 13px; color: #94a3b8; }
         h2 { margin: 0 0 8px 0; font-size: 22px; color: #ffffff; }
         p.subtitle { font-size: 13px; color: #94a3b8; margin-top: 0; line-height: 1.4; }
         label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-top: 14px; margin-bottom: 6px; letter-spacing: 0.5px; }
@@ -18,12 +18,9 @@
         .warning-text { font-size: 11px; color: #f59e0b; margin-top: 4px; display: block; }
         button { width: 100%; padding: 14px; background: #10b981; color: #0f172a; border: none; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
         button:hover { background: #059669; color: #fff; }
-        .secondary-btn { background: #334155; color: #f8fafc; margin-top: 10px; }
-        .secondary-btn:hover { background: #475569; }
         .section-card { margin-top: 25px; border-top: 1px solid #334155; padding-top: 20px; }
         .success { color: #10b981; font-weight: bold; font-size: 13px; margin-top: 10px; }
         .error { color: #ef4444; font-weight: bold; font-size: 13px; margin-top: 10px; }
-        .trade-card { background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid #334155; }
     </style>
 </head>
 <body>
@@ -31,50 +28,38 @@
 <div class="container">
     <div class="header">
         <div class="logo-badge">P Once P2P</div>
-        <div class="nav-links" id="authSwitch" onclick="toggleAuthMode()">Already have an account? Login</div>
+        <div class="step-indicator" id="stepIndicator">Step 1 of 2</div>
     </div>
 
+    <!-- REGISTER VIEW -->
     <div id="registerView">
         <h2>Create Your Account</h2>
         <p class="subtitle">Enter your details accurately. Your legal full name must match your ID documents.</p>
 
         <label>Nickname</label>
-        <input type="text" id="regUsername" placeholder="e.g. CryptoTrader99">
+        <input type="text" id="username" placeholder="e.g. CryptoTrader99">
 
         <label>Legal Full Name (Matching ID)</label>
-        <input type="text" id="regFullName" placeholder="e.g. Abebe Kebede">
+        <input type="text" id="fullName" placeholder="e.g. Abebe Kebede">
         <span class="warning-text">⚠️ Cannot be changed after submission</span>
 
         <label>Email Address</label>
-        <input type="email" id="regEmail" placeholder="name@example.com">
+        <input type="email" id="email" placeholder="name@example.com">
 
         <label>Phone Number</label>
-        <input type="text" id="regPhone" placeholder="+251 9XXXXXXXX">
+        <input type="text" id="phone" placeholder="+251 9XXXXXXXX">
 
         <label>Pre-March 2025 Verified Binance ID</label>
-        <input type="text" id="regBinanceUid" placeholder="Enter your Binance UID">
+        <input type="text" id="binanceUid" placeholder="Enter your Binance UID">
 
         <label>Create Password</label>
-        <input type="password" id="regPassword" placeholder="••••••••">
+        <input type="password" id="password" placeholder="••••••••">
 
         <button onclick="registerUser()">Continue to Document Upload →</button>
         <p id="regMsg"></p>
     </div>
 
-    <div id="loginView" style="display:none;">
-        <h2>Welcome Back</h2>
-        <p class="subtitle">Log in to manage your wallet, trades, and verification status.</p>
-
-        <label>Nickname / Username</label>
-        <input type="text" id="loginUsername" placeholder="Your Nickname">
-
-        <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="••••••••">
-
-        <button onclick="loginUser()">Login to Dashboard</button>
-        <p id="loginMsg"></p>
-    </div>
-
+    <!-- DOCUMENT UPLOAD VIEW -->
     <div id="uploadView" class="section-card" style="display:none;">
         <h2>Upload ID Document</h2>
         <p class="subtitle">Please upload a clear picture of your legal ID to unlock trading features.</p>
@@ -86,68 +71,30 @@
         <p id="idMsg"></p>
     </div>
 
-    <div id="dashboardView" style="display:none;">
-        <h2>User Dashboard</h2>
-        <p class="subtitle">Logged in as: <b id="userBadge" style="color:#38bdf8;"></b></p>
-        
-        <div style="background:#0f172a; padding:15px; border-radius:8px; border:1px solid #334155; margin-top:15px;">
-            <p style="margin:0; font-size:12px; color:#94a3b8;">WALLET BALANCE</p>
-            <h3 style="margin:5px 0 0 0; color:#10b981;" id="walletBalance">0.00</h3>
-        </div>
+    <!-- WITHDRAWAL PASSWORD SETUP VIEW (Unlocked post-verification) -->
+    <div id="withdrawPasswordView" class="section-card" style="display:none;">
+        <h2>Set Withdrawal Password</h2>
+        <p class="subtitle">Your account is verified! Create a secure 6-digit withdrawal PIN to protect your funds.</p>
 
-        <div class="section-card">
-            <h3>Deposit Funds (Verified Users Only)</h3>
-            <label>Amount</label>
-            <input type="number" id="depositAmount" placeholder="Enter amount">
-            <button onclick="depositFunds()">Deposit Now</button>
-            <p id="depositMsg"></p>
-        </div>
+        <label>New Withdrawal Password / PIN</label>
+        <input type="password" id="withdrawPin" placeholder="Enter 6-digit PIN">
 
-        <div class="section-card">
-            <h3>Create Sell Offer (Escrow)</h3>
-            <label>Amount to Sell</label>
-            <input type="number" id="tradeAmount" placeholder="Amount">
-            <label>Price per Unit</label>
-            <input type="number" id="tradePrice" placeholder="Price">
-            <button onclick="createTrade()">Lock in Escrow & Publish</button>
-            <p id="tradeMsg"></p>
-        </div>
-
-        <div class="section-card">
-            <h3>Open Marketplace Trades</h3>
-            <button class="secondary-btn" onclick="loadMarketplace()">Refresh Open Trades</button>
-            <div id="marketplaceList"></div>
-        </div>
+        <button onclick="setWithdrawPassword()">Save Withdrawal Password</button>
+        <p id="withdrawMsg"></p>
     </div>
 </div>
 
 <script>
     const API_URL = ''; 
-    let currentUsername = '';
-
-    function toggleAuthMode() {
-        const regView = document.getElementById('registerView');
-        const loginView = document.getElementById('loginView');
-        const switchText = document.getElementById('authSwitch');
-
-        if (regView.style.display === 'none') {
-            regView.style.display = 'block';
-            loginView.style.display = 'none';
-            switchText.innerText = 'Already have an account? Login';
-        } else {
-            regView.style.display = 'none';
-            loginView.style.display = 'block';
-            switchText.innerText = "Don't have an account? Register";
-        }
-    }
+    let activeUsername = '';
 
     async function registerUser() {
-        const username = document.getElementById('regUsername').value;
-        const fullName = document.getElementById('regFullName').value;
-        const email = document.getElementById('regEmail').value;
-        const phone = document.getElementById('regPhone').value;
-        const binanceUid = document.getElementById('regBinanceUid').value;
-        const password = document.getElementById('regPassword').value;
+        const username = document.getElementById('username').value;
+        const fullName = document.getElementById('fullName').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const binanceUid = document.getElementById('binanceUid').value;
+        const password = document.getElementById('password').value;
         const msgEl = document.getElementById('regMsg');
 
         const res = await fetch(`${API_URL}/api/register`, {
@@ -158,37 +105,15 @@
         const data = await res.json();
         
         if (res.ok) {
-            currentUsername = data.username;
+            activeUsername = data.username;
             msgEl.className = 'success';
             msgEl.innerText = data.message;
             document.getElementById('registerView').style.display = 'none';
             document.getElementById('uploadView').style.display = 'block';
+            document.getElementById('stepIndicator').innerText = 'Step 2 of 2';
         } else {
             msgEl.className = 'error';
             msgEl.innerText = data.error;
-        }
-    }
-
-    async function loginUser() {
-        const username = document.getElementById('loginUsername').value;
-        const password = document.getElementById('loginPassword').value;
-        const msgEl = document.getElementById('loginMsg');
-
-        // Simple fetch to check user existence and load dashboard data
-        const res = await fetch(`${API_URL}/api/marketplace?username=${username}`);
-        const data = await res.json();
-
-        if (res.ok || data.balance !== undefined) {
-            currentUsername = username;
-            document.getElementById('loginView').style.display = 'none';
-            document.querySelector('.header').style.display = 'none';
-            document.getElementById('dashboardView').style.display = 'block';
-            document.getElementById('userBadge').innerText = username;
-            document.getElementById('walletBalance').innerText = data.balance || 0;
-            loadMarketplace();
-        } else {
-            msgEl.className = 'error';
-            msgEl.innerText = data.error || 'Login failed. Check your username.';
         }
     }
 
@@ -203,7 +128,7 @@
         }
 
         const formData = new FormData();
-        formData.append('username', currentUsername);
+        formData.append('username', activeUsername);
         formData.append('idImage', fileInput.files[0]);
 
         const res = await fetch(`${API_URL}/api/submit-id`, { method: 'POST', body: formData });
@@ -211,79 +136,35 @@
         
         if (res.ok) {
             msgEl.className = 'success';
-            msgEl.innerText = data.message + ' You can now log in once approved by admin.';
+            msgEl.innerText = data.message + ' Once approved by admin, you can set your withdrawal password.';
+            // For testing convenience in Mini App, we can also reveal the withdraw password step
+            setTimeout(() => {
+                document.getElementById('uploadView').style.display = 'none';
+                document.getElementById('withdrawPasswordView').style.display = 'block';
+            }, 2500);
         } else {
             msgEl.className = 'error';
             msgEl.innerText = data.error;
         }
     }
 
-    async function depositFunds() {
-        const amount = document.getElementById('depositAmount').value;
-        const msgEl = document.getElementById('depositMsg');
+    async function setWithdrawPassword() {
+        const withdrawPassword = document.getElementById('withdrawPin').value;
+        const msgEl = document.getElementById('withdrawMsg');
 
-        const res = await fetch(`${API_URL}/api/wallet/deposit`, {
+        const res = await fetch(`${API_URL}/api/wallet/set-withdraw-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: currentUsername, amount })
+            body: JSON.stringify({ username: activeUsername, withdrawPassword })
         });
         const data = await res.json();
 
         if (res.ok) {
             msgEl.className = 'success';
             msgEl.innerText = data.message;
-            document.getElementById('walletBalance').innerText = data.newBalance;
         } else {
             msgEl.className = 'error';
             msgEl.innerText = data.error;
-        }
-    }
-
-    async function createTrade() {
-        const amount = document.getElementById('tradeAmount').value;
-        const price = document.getElementById('tradePrice').value;
-        const msgEl = document.getElementById('tradeMsg');
-
-        const res = await fetch(`${API_URL}/api/trades/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: currentUsername, amount, price })
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-            msgEl.className = 'success';
-            msgEl.innerText = data.message;
-            loadMarketplace();
-        } else {
-            msgEl.className = 'error';
-            msgEl.innerText = data.error;
-        }
-    }
-
-    async function loadMarketplace() {
-        const listEl = document.getElementById('marketplaceList');
-        listEl.innerHTML = 'Loading trades...';
-
-        try {
-            const res = await fetch(`${API_URL}/api/trades/open`);
-            const trades = await res.json();
-            
-            if (trades.length === 0) {
-                listEl.innerHTML = '<p style="font-size:13px; color:#94a3b8;">No open trades available right now.</p>';
-                return;
-            }
-
-            let html = '';
-            trades.forEach(trade => {
-                html += `<div class="trade-card">
-                    <b>Seller:</b> ${trade.seller}<br>
-                    <b>Amount:</b> ${trade.amount} | <b>Price:</b> ${trade.price}
-                </div>`;
-            });
-            listEl.innerHTML = html;
-        } catch (err) {
-            listEl.innerHTML = '<p class="error">Failed to load marketplace.</p>';
         }
     }
 </script>
