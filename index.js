@@ -25,24 +25,29 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// Trade Schema for P2P Escrow
+const tradeSchema = new mongoose.Schema({
+  seller: { type: String, required: true },
+  buyer: { type: String, default: '' },
+  amount: { type: Number, required: true },
+  price: { type: Number, required: true }, // e.g., fiat price per unit
+  status: { type: String, enum: ['open', 'in-progress', 'completed', 'cancelled'], default: 'open' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Trade = mongoose.model('Trade', tradeSchema);
+
 // Registration Endpoint
 app.post('/api/register', async (req, res) => {
   try {
     const { username, password } = req.body;
-    
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return res.status(400).json({ error: 'Username is already taken' });
     }
-
     const newUser = new User({ username, password, balance: 0, isVerified: false });
     await newUser.save();
-
-    res.status(201).json({ 
-      message: 'Registered successfully. Please upload your ID to access services.', 
-      username: newUser.username,
-      isVerified: false 
-    });
+    res.status(201).json({ message: 'Registered successfully. Please upload your ID.', username: newUser.username });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -53,96 +58,119 @@ app.post('/api/submit-id', upload.single('idImage'), async (req, res) => {
   try {
     const { username } = req.body;
     const user = await User.findOne({ username });
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'Please upload an ID image file' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!req.file) return res.status(400).json({ error: 'Please upload an ID image file' });
 
     user.idImageName = req.file.originalname;
-    user.isVerified = false; 
+    user.isVerified = false;
     await user.save();
-
-    res.json({ message: 'ID uploaded successfully! Pending review. Services remain locked.' });
+    res.json({ message: 'ID uploaded successfully! Pending review.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Admin Route to Approve User ID Review
+// Admin Route to Approve User ID
 app.post('/api/admin/approve-user', async (req, res) => {
   try {
     const { username } = req.body;
     const user = await User.findOne({ username });
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
     user.isVerified = true;
     await user.save();
-
-    res.json({ message: `User ${username} verified successfully! Marketplace access unlocked.` });
+    res.json({ message: `User ${username} verified successfully!` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Wallet Deposit Endpoint (Only for verified users)
+// Wallet Deposit Endpoint
 app.post('/api/wallet/deposit', async (req, res) => {
   try {
     const { username, amount } = req.body;
-    
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ error: 'Invalid deposit amount' });
-    }
+    if (!amount || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
 
     const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    if (!user.isVerified) {
-      return res.status(403).json({ error: 'Account not verified. Complete ID review to deposit funds.' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user.isVerified) return res.status(403).json({ error: 'Account not verified.' });
 
     user.balance += Number(amount);
     await user.save();
-
     res.json({ message: 'Deposit successful!', newBalance: user.balance });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Marketplace / Services Endpoint
-app.get('/api/marketplace', async (req, res) => {
+// Create P2P Sell Offer (Locks funds in escrow)
+app.post('/api/trades/create', async (req, res) => {
   try {
-    const { username } = req.query;
+    const { username, amount, price } = req.body;
     const user = await User.findOne({ username });
 
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    if (!user || !user.isVerified) {
+      return res.status(403).json({ error: 'Verified account required to create trades' });
     }
 
-    if (user.isVerified !== true) {
-      return res.status(403).json({ 
-        error: 'Access denied. Your ID is still under review or not verified yet.', 
-        isVerified: false 
-      });
+    if (user.balance < amount) {
+      return res.status(400).json({ error: 'Insufficient balance to escrow this amount' });
     }
 
-    res.json({ message: 'Welcome to the P2P Marketplace!', balance: user.balance });
+    // Deduct from seller balance (move to escrow)
+    user.balance -= Number(amount);
+    await user.save();
+
+    const newTrade = new Trade({ seller: username, amount, price, status: 'open' });
+    await newTrade.save();
+
+    res.status(201).json({ message: 'Trade offer created and funds locked in escrow!', tradeId: newTrade._id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// View Open Trades Marketplace
+app.get('/api/trades/open', async (req, res) => {
+  try {
+    const trades = await Trade.find({ status: 'open' });
+    res.json(trades);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Complete Trade (Releases escrow to buyer)
+app.post('/api/trades/complete', async (req, res) => {
+  try {
+    const { tradeId, buyerUsername } = req.body;
+    const trade = await Trade.findById(tradeId);
+
+    if (!trade || trade.status !== 'open') {
+      return res.status(404).json({ error: 'Trade not available or already completed' });
+    }
+
+    const buyer = await User.findOne({ username: buyerUsername });
+    if (!buyer || !buyer.isVerified) {
+      return res.status(403).json({ error: 'Valid verified buyer required' });
+    }
+
+    trade.buyer = buyerUsername;
+    trade.status = 'completed';
+    await trade.save();
+
+    // Release funds to buyer's wallet
+    buyer.balance += Number(trade.amount);
+    await buyer.save();
+
+    res.json({ message: 'Trade completed successfully! Funds released from escrow to buyer.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 app.get('/', (req, res) => {
-  res.send('P2P Backend is running successfully! 🚀');
+  res.send('P2P Backend with Escrow is running successfully! 🚀');
 });
 
 app.listen(PORT, () => {
