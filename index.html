@@ -3,123 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Marketplace & Escrow</title>
+    <title>Once P2P - Create Account</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; background: #f9f9f9; color: #333; }
-        .card { background: #fff; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        input, button { width: 100%; padding: 10px; margin-top: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        h2 { margin-top: 0; color: #007bff; }
-        .success { color: green; font-weight: bold; }
-        .error { color: red; font-weight: bold; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 440px; background: #1e293b; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .logo-badge { background: #10b981; color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
+        .step-indicator { font-size: 13px; color: #94a3b8; }
+        h2 { margin: 0 0 8px 0; font-size: 22px; color: #ffffff; }
+        p.subtitle { font-size: 13px; color: #94a3b8; margin-top: 0; line-height: 1.4; }
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-top: 14px; margin-bottom: 6px; letter-spacing: 0.5px; }
+        input { width: 100%; padding: 12px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 14px; box-sizing: border-box; }
+        input:focus { outline: none; border-color: #10b981; }
+        .warning-text { font-size: 11px; color: #f59e0b; margin-top: 4px; display: block; }
+        button { width: 100%; padding: 14px; background: #10b981; color: #0f172a; border: none; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
+        button:hover { background: #059669; color: #fff; }
+        .section-card { margin-top: 25px; border-top: 1px solid #334155; padding-top: 20px; }
+        .success { color: #10b981; font-weight: bold; font-size: 13px; margin-top: 10px; }
+        .error { color: #ef4444; font-weight: bold; font-size: 13px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h2>P2P Crypto & Service Marketplace</h2>
+<div class="container">
+    <div class="header">
+        <div class="logo-badge">P Once P2P</div>
+        <div class="step-indicator">Step 1 of 2</div>
+    </div>
 
-    <!-- Registration Section -->
-    <div class="card">
-        <h3>1. Register Account</h3>
-        <input type="text" id="regUsername" placeholder="Choose Username">
-        <input type="password" id="regPassword" placeholder="Choose Password">
-        <button onclick="registerUser()">Register</button>
+    <h2>Create Your Account</h2>
+    <p class="subtitle">Enter your details accurately. Your legal full name must match your ID documents.</p>
+
+    <!-- Registration Form -->
+    <div id="registerSection">
+        <label>Nickname</label>
+        <input type="text" id="username" placeholder="e.g. CryptoTrader99">
+
+        <label>Legal Full Name (Matching ID)</label>
+        <input type="text" id="fullName" placeholder="e.g. Abebe Kebede">
+        <span class="warning-text">⚠️ Cannot be changed after submission</span>
+
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="name@example.com">
+
+        <label>Phone Number</label>
+        <input type="text" id="phone" placeholder="+251 9XXXXXXXX">
+
+        <label>Pre-March 2025 Verified Binance ID</label>
+        <input type="text" id="binanceUid" placeholder="Enter your Binance UID">
+
+        <label>Create Password</label>
+        <input type="password" id="password" placeholder="••••••••">
+
+        <button onclick="registerUser()">Continue to Document Upload →</button>
         <p id="regMsg"></p>
     </div>
 
-    <!-- ID Upload Section -->
-    <div class="card">
-        <h3>2. Upload ID for Verification</h3>
-        <input type="text" id="idUsername" placeholder="Your Username">
+    <!-- Document Upload Section (Hidden until registration) -->
+    <div id="uploadSection" class="section-card" style="display:none;">
+        <h2>Upload ID Document</h2>
+        <p class="subtitle">Please upload a clear picture of your legal ID to unlock trading features.</p>
+        
+        <label>Select ID Image File</label>
         <input type="file" id="idFile">
-        <button onclick="submitId()">Submit ID</button>
+        
+        <button onclick="submitId()">Submit ID for Review</button>
         <p id="idMsg"></p>
     </div>
+</div>
 
-    <!-- Marketplace Section -->
-    <div class="card">
-        <h3>3. Marketplace & Open Trades</h3>
-        <button onclick="loadMarketplace()">Refresh Open Trades</button>
-        <div id="tradeList"></div>
-    </div>
+<script>
+    const API_URL = ''; // Same domain (Render backend)
+    let registeredUsername = '';
 
-    <script>
-        const API_URL = 'https://p2p-backend-j582.onrender.com'; // Your Render Backend URL
+    async function registerUser() {
+        const username = document.getElementById('username').value;
+        const fullName = document.getElementById('fullName').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const binanceUid = document.getElementById('binanceUid').value;
+        const password = document.getElementById('password').value;
+        const msgEl = document.getElementById('regMsg');
 
-        async function registerUser() {
-            const username = document.getElementById('regUsername').value;
-            const password = document.getElementById('regPassword').value;
-            const msgEl = document.getElementById('regMsg');
-
-            const res = await fetch(`${API_URL}/api/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                msgEl.className = 'success';
-                msgEl.innerText = data.message;
-            } else {
-                msgEl.className = 'error';
-                msgEl.innerText = data.error;
-            }
+        if (!username || !fullName || !password) {
+            msgEl.className = 'error';
+            msgEl.innerText = 'Please fill in all required fields.';
+            return;
         }
 
-        async function submitId() {
-            const username = document.getElementById('idUsername').value;
-            const fileInput = document.getElementById('idFile');
-            const msgEl = document.getElementById('idMsg');
+        const res = await fetch(`${API_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, fullName, email, phone, binanceUid, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            registeredUsername = data.username;
+            msgEl.className = 'success';
+            msgEl.innerText = data.message;
+            // Switch to document upload section
+            document.getElementById('uploadSection').style.display = 'block';
+        } else {
+            msgEl.className = 'error';
+            msgEl.innerText = data.error;
+        }
+    }
 
-            if (!fileInput.files[0]) {
-                msgEl.className = 'error';
-                msgEl.innerText = 'Please select an image file first.';
-                return;
-            }
+    async function submitId() {
+        const fileInput = document.getElementById('idFile');
+        const msgEl = document.getElementById('idMsg');
 
-            const formData = new FormData();
-            formData.append('username', username);
-            formData.append('idImage', fileInput.files[0]);
-
-            const res = await fetch(`${API_URL}/api/submit-id`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (res.ok) {
-                msgEl.className = 'success';
-                msgEl.innerText = data.message;
-            } else {
-                msgEl.className = 'error';
-                msgEl.innerText = data.error;
-            }
+        if (!fileInput.files[0]) {
+            msgEl.className = 'error';
+            msgEl.innerText = 'Please select an ID image file first.';
+            return;
         }
 
-        async function loadMarketplace() {
-            const listEl = document.getElementById('tradeList');
-            listEl.innerHTML = 'Loading...';
+        const formData = new FormData();
+        formData.append('username', registeredUsername);
+        formData.append('idImage', fileInput.files[0]);
 
-            try {
-                const res = await fetch(`${API_URL}/api/trades/open`);
-                const trades = await res.json();
-                
-                if (trades.length === 0) {
-                    listEl.innerHTML = '<p>No open trades available right now.</p>';
-                    return;
-                }
-
-                let html = '';
-                trades.forEach(trade => {
-                    html += `<div style="border-bottom:1px solid #eee; padding:8px 0;">
-                        <b>Seller:</b> ${trade.seller} | <b>Amount:</b> ${trade.amount} | <b>Price:</b> ${trade.price}
-                    </div>`;
-                });
-                listEl.innerHTML = html;
-            } catch (err) {
-                listEl.innerHTML = '<p class="error">Failed to load marketplace trades.</p>';
-            }
+        const res = await fetch(`${API_URL}/api/submit-id`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            msgEl.className = 'success';
+            msgEl.innerText = data.message + ' You can now await admin review.';
+        } else {
+            msgEl.className = 'error';
+            msgEl.innerText = data.error;
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
