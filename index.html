@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Marketplace & Escrow</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; background: #f9f9f9; color: #333; }
+        .card { background: #fff; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 10px; margin-top: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        h2 { margin-top: 0; color: #007bff; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>P2P Crypto & Service Marketplace</h2>
+
+    <!-- Registration Section -->
+    <div class="card">
+        <h3>1. Register Account</h3>
+        <input type="text" id="regUsername" placeholder="Choose Username">
+        <input type="password" id="regPassword" placeholder="Choose Password">
+        <button onclick="registerUser()">Register</button>
+        <p id="regMsg"></p>
+    </div>
+
+    <!-- ID Upload Section -->
+    <div class="card">
+        <h3>2. Upload ID for Verification</h3>
+        <input type="text" id="idUsername" placeholder="Your Username">
+        <input type="file" id="idFile">
+        <button onclick="submitId()">Submit ID</button>
+        <p id="idMsg"></p>
+    </div>
+
+    <!-- Marketplace Section -->
+    <div class="card">
+        <h3>3. Marketplace & Open Trades</h3>
+        <button onclick="loadMarketplace()">Refresh Open Trades</button>
+        <div id="tradeList"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://p2p-backend-j582.onrender.com'; // Your Render Backend URL
+
+        async function registerUser() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const msgEl = document.getElementById('regMsg');
+
+            const res = await fetch(`${API_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                msgEl.className = 'success';
+                msgEl.innerText = data.message;
+            } else {
+                msgEl.className = 'error';
+                msgEl.innerText = data.error;
+            }
+        }
+
+        async function submitId() {
+            const username = document.getElementById('idUsername').value;
+            const fileInput = document.getElementById('idFile');
+            const msgEl = document.getElementById('idMsg');
+
+            if (!fileInput.files[0]) {
+                msgEl.className = 'error';
+                msgEl.innerText = 'Please select an image file first.';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('idImage', fileInput.files[0]);
+
+            const res = await fetch(`${API_URL}/api/submit-id`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok) {
+                msgEl.className = 'success';
+                msgEl.innerText = data.message;
+            } else {
+                msgEl.className = 'error';
+                msgEl.innerText = data.error;
+            }
+        }
+
+        async function loadMarketplace() {
+            const listEl = document.getElementById('tradeList');
+            listEl.innerHTML = 'Loading...';
+
+            try {
+                const res = await fetch(`${API_URL}/api/trades/open`);
+                const trades = await res.json();
+                
+                if (trades.length === 0) {
+                    listEl.innerHTML = '<p>No open trades available right now.</p>';
+                    return;
+                }
+
+                let html = '';
+                trades.forEach(trade => {
+                    html += `<div style="border-bottom:1px solid #eee; padding:8px 0;">
+                        <b>Seller:</b> ${trade.seller} | <b>Amount:</b> ${trade.amount} | <b>Price:</b> ${trade.price}
+                    </div>`;
+                });
+                listEl.innerHTML = html;
+            } catch (err) {
+                listEl.innerHTML = '<p class="error">Failed to load marketplace trades.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
