@@ -1,173 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Once P2P Telegram Mini App</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 440px; background: #1e293b; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logo-badge { background: #10b981; color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
-        .step-indicator { font-size: 13px; color: #94a3b8; }
-        h2 { margin: 0 0 8px 0; font-size: 22px; color: #ffffff; }
-        p.subtitle { font-size: 13px; color: #94a3b8; margin-top: 0; line-height: 1.4; }
-        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-top: 14px; margin-bottom: 6px; letter-spacing: 0.5px; }
-        input { width: 100%; padding: 12px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 14px; box-sizing: border-box; }
-        input:focus { outline: none; border-color: #10b981; }
-        .warning-text { font-size: 11px; color: #f59e0b; margin-top: 4px; display: block; }
-        button { width: 100%; padding: 14px; background: #10b981; color: #0f172a; border: none; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
-        button:hover { background: #059669; color: #fff; }
-        .section-card { margin-top: 25px; border-top: 1px solid #334155; padding-top: 20px; }
-        .success { color: #10b981; font-weight: bold; font-size: 13px; margin-top: 10px; }
-        .error { color: #ef4444; font-weight: bold; font-size: 13px; margin-top: 10px; }
-    </style>
-</head>
-<body>
+async function submitId() {
+    const fileInput = document.getElementById('idFile');
+    const msgEl = document.getElementById('idMsg');
 
-<div class="container">
-    <div class="header">
-        <div class="logo-badge">P Once P2P</div>
-        <div class="step-indicator" id="stepIndicator">Step 1 of 2</div>
-    </div>
+    if (!fileInput.files || fileInput.files.length === 0) {
+        msgEl.className = 'error';
+        msgEl.innerText = 'Please select a clear ID image before proceeding.';
+        return; // Stops execution completely if no file is selected
+    }
 
-    <!-- REGISTER VIEW -->
-    <div id="registerView">
-        <h2>Create Your Account</h2>
-        <p class="subtitle">Enter your details accurately. Your legal full name must match your ID documents.</p>
+    const formData = new FormData();
+    formData.append('username', activeUsername);
+    formData.append('idImage', fileInput.files[0]);
 
-        <label>Nickname</label>
-        <input type="text" id="username" placeholder="e.g. CryptoTrader99">
+    msgEl.className = '';
+    msgEl.innerText = 'Uploading ID... Please wait.';
 
-        <label>Legal Full Name (Matching ID)</label>
-        <input type="text" id="fullName" placeholder="e.g. Abebe Kebede">
-        <span class="warning-text">⚠️ Cannot be changed after submission</span>
-
-        <label>Email Address</label>
-        <input type="email" id="email" placeholder="name@example.com">
-
-        <label>Phone Number</label>
-        <input type="text" id="phone" placeholder="+251 9XXXXXXXX">
-
-        <label>Pre-March 2025 Verified Binance ID</label>
-        <input type="text" id="binanceUid" placeholder="Enter your Binance UID">
-
-        <label>Create Password</label>
-        <input type="password" id="password" placeholder="••••••••">
-
-        <button onclick="registerUser()">Continue to Document Upload →</button>
-        <p id="regMsg"></p>
-    </div>
-
-    <!-- DOCUMENT UPLOAD VIEW -->
-    <div id="uploadView" class="section-card" style="display:none;">
-        <h2>Upload ID Document</h2>
-        <p class="subtitle">Please upload a clear picture of your legal ID to unlock trading features.</p>
-        
-        <label>Select ID Image File</label>
-        <input type="file" id="idFile">
-        
-        <button onclick="submitId()">Submit ID for Review</button>
-        <p id="idMsg"></p>
-    </div>
-
-    <!-- WITHDRAWAL PASSWORD SETUP VIEW (Unlocked post-verification) -->
-    <div id="withdrawPasswordView" class="section-card" style="display:none;">
-        <h2>Set Withdrawal Password</h2>
-        <p class="subtitle">Your account is verified! Create a secure 6-digit withdrawal PIN to protect your funds.</p>
-
-        <label>New Withdrawal Password / PIN</label>
-        <input type="password" id="withdrawPin" placeholder="Enter 6-digit PIN">
-
-        <button onclick="setWithdrawPassword()">Save Withdrawal Password</button>
-        <p id="withdrawMsg"></p>
-    </div>
-</div>
-
-<script>
-    const API_URL = ''; 
-    let activeUsername = '';
-
-    async function registerUser() {
-        const username = document.getElementById('username').value;
-        const fullName = document.getElementById('fullName').value;
-        const email = document.getElementById('email').value;
-        const phone = document.getElementById('phone').value;
-        const binanceUid = document.getElementById('binanceUid').value;
-        const password = document.getElementById('password').value;
-        const msgEl = document.getElementById('regMsg');
-
-        const res = await fetch(`${API_URL}/api/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, fullName, email, phone, binanceUid, password })
+    try {
+        const res = await fetch(`${API_URL}/api/submit-id`, { 
+            method: 'POST', 
+            body: formData 
         });
         const data = await res.json();
         
         if (res.ok) {
-            activeUsername = data.username;
             msgEl.className = 'success';
             msgEl.innerText = data.message;
-            document.getElementById('registerView').style.display = 'none';
-            document.getElementById('uploadView').style.display = 'block';
-            document.getElementById('stepIndicator').innerText = 'Step 2 of 2';
+            // Lock the screen so they cannot bypass
+            document.getElementById('idFile').disabled = true;
         } else {
             msgEl.className = 'error';
-            msgEl.innerText = data.error;
+            msgEl.innerText = data.error || 'Upload failed. Try again.';
         }
+    } catch (err) {
+        msgEl.className = 'error';
+        msgEl.innerText = 'Network error during upload. Please try again.';
     }
-
-    async function submitId() {
-        const fileInput = document.getElementById('idFile');
-        const msgEl = document.getElementById('idMsg');
-
-        if (!fileInput.files[0]) {
-            msgEl.className = 'error';
-            msgEl.innerText = 'Please select an ID image file first.';
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('username', activeUsername);
-        formData.append('idImage', fileInput.files[0]);
-
-        const res = await fetch(`${API_URL}/api/submit-id`, { method: 'POST', body: formData });
-        const data = await res.json();
-        
-        if (res.ok) {
-            msgEl.className = 'success';
-            msgEl.innerText = data.message + ' Once approved by admin, you can set your withdrawal password.';
-            // For testing convenience in Mini App, we can also reveal the withdraw password step
-            setTimeout(() => {
-                document.getElementById('uploadView').style.display = 'none';
-                document.getElementById('withdrawPasswordView').style.display = 'block';
-            }, 2500);
-        } else {
-            msgEl.className = 'error';
-            msgEl.innerText = data.error;
-        }
-    }
-
-    async function setWithdrawPassword() {
-        const withdrawPassword = document.getElementById('withdrawPin').value;
-        const msgEl = document.getElementById('withdrawMsg');
-
-        const res = await fetch(`${API_URL}/api/wallet/set-withdraw-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: activeUsername, withdrawPassword })
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-            msgEl.className = 'success';
-            msgEl.innerText = data.message;
-        } else {
-            msgEl.className = 'error';
-            msgEl.innerText = data.error;
-        }
-    }
-</script>
-
-</body>
-</html>
+}
