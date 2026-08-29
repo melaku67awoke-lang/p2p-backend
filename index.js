@@ -1,13 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const multer = require('multer'); // For handling ID image uploads
+const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configure multer to store uploaded ID images temporarily in memory
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Connect to MongoDB Atlas
@@ -15,12 +14,11 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB Atlas successfully!'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// User Schema with strict verification locking
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   balance: { type: Number, default: 0 },
-  isVerified: { type: Boolean, default: false }, // Locked by default
+  isVerified: { type: Boolean, default: false },
   idImageName: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
@@ -50,7 +48,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Submit ID Endpoint (Accepts actual image file upload)
+// Submit ID Endpoint
 app.post('/api/submit-id', upload.single('idImage'), async (req, res) => {
   try {
     const { username } = req.body;
@@ -65,7 +63,7 @@ app.post('/api/submit-id', upload.single('idImage'), async (req, res) => {
     }
 
     user.idImageName = req.file.originalname;
-    user.isVerified = false; // Remains false until admin/system approval
+    user.isVerified = false; 
     await user.save();
 
     res.json({ message: 'ID uploaded successfully! Pending review. Services remain locked.' });
@@ -74,7 +72,26 @@ app.post('/api/submit-id', upload.single('idImage'), async (req, res) => {
   }
 });
 
-// Marketplace / Services Endpoint (Strictly blocks unverified users)
+// Admin Route to Approve User ID Review
+app.post('/api/admin/approve-user', async (req, res) => {
+  try {
+    const { username } = req.body;
+    const user = await User.findOne({ username });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    res.json({ message: `User ${username} verified successfully! Marketplace access unlocked.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Marketplace / Services Endpoint
 app.get('/api/marketplace', async (req, res) => {
   try {
     const { username } = req.query;
