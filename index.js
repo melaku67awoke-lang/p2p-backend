@@ -6,17 +6,20 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname)); // Serves index.html automatically
+app.use(express.static(__dirname));
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB Atlas successfully!'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
+  username: { type: String, required: true, unique: true }, // Nickname
+  fullName: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  binanceUid: { type: String, default: '' },
   password: { type: String, required: true },
   balance: { type: Number, default: 0 },
   isVerified: { type: Boolean, default: false },
@@ -40,14 +43,14 @@ const Trade = mongoose.model('Trade', tradeSchema);
 // Registration Endpoint
 app.post('/api/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, fullName, email, phone, binanceUid, password } = req.body;
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ error: 'Username is already taken' });
+      return res.status(400).json({ error: 'Nickname/Username is already taken' });
     }
-    const newUser = new User({ username, password, balance: 0, isVerified: false });
+    const newUser = new User({ username, fullName, email, phone, binanceUid, password, balance: 0, isVerified: false });
     await newUser.save();
-    res.status(201).json({ message: 'Registered successfully. Please upload your ID.', username: newUser.username });
+    res.status(201).json({ message: 'Account created successfully. Please proceed to document upload.', username: newUser.username });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -64,7 +67,7 @@ app.post('/api/submit-id', upload.single('idImage'), async (req, res) => {
     user.idImageName = req.file.originalname;
     user.isVerified = false;
     await user.save();
-    res.json({ message: 'ID uploaded successfully! Pending review.' });
+    res.json({ message: 'ID uploaded successfully! Pending admin review.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -161,7 +164,7 @@ app.post('/api/trades/complete', async (req, res) => {
     buyer.balance += Number(trade.amount);
     await buyer.save();
 
-    res.json({ message: 'Trade completed successfully! Funds released from escrow to buyer.' });
+    res.json({ message: 'Trade completed successfully!' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
