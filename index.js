@@ -7,6 +7,7 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(express.static(__dirname)); // <-- THIS LINE FIXES THE "CANNOT GET /" ERROR
 
 // Configure Multer for ID document uploads
 const storage = multer.diskStorage({
@@ -105,7 +106,6 @@ app.post('/api/wallet/set-withdraw-password', async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ error: 'User not found' });
     
-    // For seamless testing in mini app, you can bypass or enforce verification here
     user.withdrawPassword = withdrawPassword;
     await user.save();
     
