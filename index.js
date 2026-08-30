@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// 1. MongoDB Schema with Status Tracking
+// MongoDB Schema with Status Tracking
 const verificationSchema = new mongoose.Schema({
     username: { type: String, required: true },
     fullName: { type: String, required: true },
@@ -30,7 +30,12 @@ const verificationSchema = new mongoose.Schema({
 
 const Verification = mongoose.model('Verification', verificationSchema);
 
-// 2. Handle ID Submission & Save Data
+// Serve the main frontend page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Handle ID Submission & Save Data
 app.post('/api/verify-id', upload.fields([{ name: 'frontId', maxCount: 1 }, { name: 'backId', maxCount: 1 }]), async (req, res) => {
     try {
         const { username, fullName, email, phone, binanceId } = req.body;
@@ -60,7 +65,7 @@ app.post('/api/verify-id', upload.fields([{ name: 'frontId', maxCount: 1 }, { na
     }
 });
 
-// 3. Check Status Endpoint (For App Startup)
+// Check Status Endpoint (For App Startup)
 app.get('/api/user-status', async (req, res) => {
     try {
         const { email } = req.query;
@@ -77,7 +82,7 @@ app.get('/api/user-status', async (req, res) => {
     }
 });
 
-// 4. Admin Approval Route (Call this to approve a user)
+// Admin Approval Route (Call this to approve a user)
 app.post('/api/admin/approve', async (req, res) => {
     try {
         const { email } = req.body;
