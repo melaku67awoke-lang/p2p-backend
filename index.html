@@ -150,7 +150,7 @@
         <div class="status-pill">Secure Escrow Live</div>
     </div>
 
-    <!-- VIEW 0: Gorgeous Landing Page -->
+    <!-- VIEW 0: Landing Page -->
     <div id="view-landing" class="view active">
         <div class="badge-sub">● Exclusive Ethiopian P2P Community Gateway</div>
         <h1>Secure, Private & Direct <span>Digital Asset Trading</span></h1>
@@ -236,7 +236,6 @@
 </div>
 
 <script>
-    // Automatically check user status on app load
     window.addEventListener('DOMContentLoaded', async () => {
         const savedEmail = localStorage.getItem('p2p_email');
         if (!savedEmail) return;
@@ -250,6 +249,7 @@
             } else if (data.status === 'pending') {
                 showView('view-review');
             }
+            // If rejected, it naturally stays on landing/registration so they can re-submit fresh
         } catch (err) {
             console.error('Failed to check user status:', err);
         }
@@ -280,10 +280,10 @@
         const frontInput = document.getElementById('frontIdFile').files[0];
         const backInput = document.getElementById('backIdFile').files[0];
         const username = localStorage.getItem('p2p_username') || document.getElementById('username').value;
-        const fullname = document.getElementById('fullname').value || '';
+        const fullname = document.getElementById('fullname').value || document.getElementById('username').value;
         const email = localStorage.getItem('p2p_email') || document.getElementById('email').value;
-        const phone = document.getElementById('phone') ? document.getElementById('phone').value : '';
-        const binanceId = document.getElementById('binanceId') ? document.getElementById('binanceId').value : '';
+        const phone = document.getElementById('phone') ? document.getElementById('phone').value : 'Not Provided';
+        const binanceId = document.getElementById('binanceId') ? document.getElementById('binanceId').value : 'Not Provided';
 
         if (!frontInput || !backInput) {
             alert('Please select both front and back ID images.');
