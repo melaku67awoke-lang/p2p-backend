@@ -6,7 +6,7 @@ const app = express();
 // Configure storage for uploaded documents
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Ensure an 'uploads' folder exists or is handled
+        cb(null, 'uploads/');
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
@@ -17,8 +17,7 @@ const upload = multer({ storage: storage });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve frontend static files if needed, or your existing setup
+app.use(express.static('public')); // Serves frontend if stored in a public folder
 
 // Handle ID upload route for front and back images
 app.post('/api/verify-id', upload.fields([
@@ -40,4 +39,10 @@ app.post('/api/verify-id', upload.fields([
         console.error(error);
         return res.status(500).json({ error: 'Internal server error during upload.' });
     }
+});
+
+// Use Render's dynamic port assignment so the app stays running successfully
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
