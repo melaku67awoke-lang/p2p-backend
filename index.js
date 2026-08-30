@@ -2,7 +2,24 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
+
 const app = express();
+
+// Connect to MongoDB using environment variable or direct string
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/p2p-app')
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+// Define Verification Schema
+const userSchema = new mongoose.Schema({
+    frontId: String,
+    backId: String,
+    status: { type: String, default: 'pending' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const UserVerification = mongoose.model('UserVerification', userSchema);
 
 // Ensure 'uploads' folder exists automatically
 const uploadDir = path.join(__dirname, 'uploads');
@@ -30,7 +47,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Handle ID upload route for front and back images
+// Handle ID upload and save to MongoDB
 app.post('/api/verify-id', upload.fields([
     { name: 'frontId', maxCount: 1 }, 
     { name: 'backId', maxCount: 1 }
@@ -39,6 +56,15 @@ app.post('/api/verify-id', upload.fields([
         if (!req.files || !req.files['frontId'] || !req.files['backId']) {
             return res.status(400).json({ error: 'Both front and back ID files are required.' });
         }
+
+        // Save submission details to MongoDB database
+        const newVerification = new UserVerification({
+            frontId: req.files['frontId'][0].path,
+            backId: req.files['backId'][0].path,
+            status: 'pending'
+        });
+
+        await newVerification.save();
 
         return res.status(200).json({ message: 'IDs uploaded and review pending.' });
     } catch (error) {
