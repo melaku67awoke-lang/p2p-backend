@@ -11,12 +11,17 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/once-p2p', 
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.log('DB connection error:', err));
 
-// User Model definition (or require your external model file here)
+// User Model definition
 const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
     kycStatus: { type: String, default: 'pending' }
 }));
 
-// KYC Status Route - placed AFTER app is initialized
+// Root Route to prevent Cannot GET / error
+app.get('/', (req, res) => {
+    res.json({ status: 'Once P2P API is running successfully' });
+});
+
+// KYC Status Route
 app.get('/api/user/status', async (req, res) => {
     try {
         const user = await User.findById(req.userId);
@@ -24,7 +29,6 @@ app.get('/api/user/status', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         
-        // Force status to approved for testing or check DB record
         if (user.kycStatus === 'approved') {
             return res.json({ 
                 verified: true, 
