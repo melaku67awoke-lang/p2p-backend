@@ -1,8 +1,17 @@
+// Safe Mongoose User model fallback
+const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
+    telegramId: { type: String, unique: true, required: true },
+    fullName: String,
+    idType: String,
+    idNumber: String,
+    isVerified: { type: Boolean, default: false },
+    hasSubmittedId: { type: Boolean, default: false }
+}));
+
 // Verification Status Route
 app.get('/api/user/status', async (req, res) => {
     try {
         const { telegramId } = req.query;
-        // Use your actual Mongoose User model here
         const user = await User.findOne({ telegramId });
         
         if (!user) {
