@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname)); // Serves files from root directory
+app.use(express.static(__dirname));
 
 // Configure file uploads
 const storage = multer.diskStorage({
@@ -24,15 +24,19 @@ const verificationSchema = new mongoose.Schema({
     binanceId: { type: String, required: true },
     frontIdPath: { type: String },
     backIdPath: { type: String },
-    status: { type: String, default: 'pending' },
+    status: { type: String, default: 'pending' }, // 'pending', 'approved', 'rejected'
     createdAt: { type: Date, default: Date.now }
 });
 
 const Verification = mongoose.model('Verification', verificationSchema);
 
-// Serve the main frontend page from root
+// Serve main app and admin panel
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 // Handle ID Submission & Save Data
@@ -65,7 +69,7 @@ app.post('/api/verify-id', upload.fields([{ name: 'frontId', maxCount: 1 }, { na
     }
 });
 
-// Check Status Endpoint
+// Check Status Endpoint (For App Startup)
 app.get('/api/user-status', async (req, res) => {
     try {
         const { email } = req.query;
@@ -82,7 +86,16 @@ app.get('/api/user-status', async (req, res) => {
     }
 });
 
-// Admin Approval Route
+// Admin Endpoints
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await Verification.find().sort({ createdAt: -1 });
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
 app.post('/api/admin/approve', async (req, res) => {
     try {
         const { email } = req.body;
@@ -99,6 +112,16 @@ app.post('/api/admin/approve', async (req, res) => {
         res.json({ success: true, message: 'User approved successfully!' });
     } catch (err) {
         res.status(500).json({ error: 'Approval failed' });
+    }
+});
+
+app.post('/api/admin/reject', async (req, res) => {
+    try {
+        const { email } = req.body;
+        await Verification.findOneAndUpdate({ email }, { status: 'rejected' });
+        res.json({ success: true, message: 'User rejected' });
+    } catch (err) {
+        res.status(500).json({ error: 'Action failed' });
     }
 });
 
