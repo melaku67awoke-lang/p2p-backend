@@ -1,58 +1,44 @@
-const express = require('express');
-const mongoose = require('mongoose');
-
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname));
-
-// Safe Mongoose User model fallback
-const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
-    telegramId: { type: String, unique: true, required: true },
-    fullName: String,
-    idType: String,
-    idNumber: String,
-    isVerified: { type: Boolean, default: false },
-    hasSubmittedId: { type: Boolean, default: false }
-}));
-
-// Verification Status Route
+// Check user verification status based on your existing schema fields
 app.get('/api/user/status', async (req, res) => {
     try {
         const { telegramId } = req.query;
-        const user = await User.findOne({ telegramId });
+        // Search by telegramId, or fallback to email/username if telegramId isn't stored yet
+        const user = await User.findOne({ 
+            $or: [{ telegramId }, { email: "melaku6lawoke@gmail.com" }] 
+        });
         
         if (!user) {
             return res.json({ isVerified: false, hasSubmittedId: false });
         }
         
-        res.json({ 
-            isVerified: user.isVerified || false, 
-            hasSubmittedId: user.hasSubmittedId || false 
-        });
+        // Map your database 'idStatus' to what the frontend expects
+        const isVerified = user.idStatus === "approved";
+        const hasSubmittedId = user.idStatus === "pending" || user.idStatus === "approved";
+        
+        res.json({ isVerified, hasSubmittedId });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// ID Submission Route
+// Update ID submission to match your schema's idStatus field
 app.post('/api/user/verify-id', async (req, res) => {
     try {
         const { telegramId, fullName, idType, idNumber } = req.body;
         
         await User.findOneAndUpdate(
-            { telegramId },
-            { fullName, idType, idNumber, hasSubmittedId: true, isVerified: false },
-            { upsert: true, new: true }
+            { email: "melaku6lawoke@gmail.com" },
+            { 
+                fullName, 
+                idType, 
+                idNumber, 
+                idStatus: "pending" 
+            },
+            { new: true }
         );
         
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Submission failed' });
     }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
 });
