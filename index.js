@@ -1,74 +1,78 @@
 const express = require('express');
-const mongoose = require('mongoose');
-
 const app = express();
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/once-p2p', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-}).then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.log('DB connection error:', err));
+// In-memory or database mock connection (Replace with your actual MongoDB client/db setup)
+// Example: const db = client.db('once_p2p');
 
-// User Model definition
-const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
-    telegramId: { type: String, required: true, unique: true },
-    kycStatus: { type: String, default: 'pending' },
-    fullName: String,
-    documentType: String
-}));
-
-// Root Route to prevent Cannot GET / error
-app.get('/', (req, res) => {
-    res.json({ status: 'Once P2P API is running successfully' });
-});
-
-// KYC Status Route
-app.get('/api/user/status/:telegramId', async (req, res) => {
+// 1. Get User Status & Route Initializer
+app.get('/api/user/:userId', async (req, res) => {
     try {
-        const user = await User.findOne({ telegramId: req.params.telegramId });
+        const { userId } = req.params;
+        const user = await db.collection('users').findOne({ userId: userId });
+        
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.json({ success: true, kycStatus: 'none' });
         }
-        res.json({ kycStatus: user.kycStatus });
+        
+        res.json({ success: true, kycStatus: user.kycStatus || 'none' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// KYC Submission Route
-app.post('/api/user/kyc', async (req, res) => {
+// 2. Submit ID Verification
+app.post('/api/verify-id', async (req, res) => {
     try {
-        const { telegramId, fullName, documentType } = req.body;
-        const user = await User.findOneAndUpdate(
-            { telegramId },
-            { fullName, documentType, kycStatus: 'pending' },
-            { upsert: true, new: true }
+        const { userId, fullName, phone, binanceUid, idImageUrl } = req.body;
+        
+        await db.collection('users').updateOne(
+            { userId: userId },
+            { 
+                $set: { 
+                    fullName, 
+                    phone, 
+                    binanceUid, 
+                    idImageUrl, 
+                    kycStatus: 'pending',
+                    updatedAt: new Date()
+                } 
+            },
+            { upsert: true }
         );
-        res.json({ success: true, user });
+        
+        res.json({ success: true, message: 'Verification submitted successfully', kycStatus: 'pending' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// Admin Review/Approval Route
-app.post('/api/admin/approve', async (req, res) => {
+// 3. Admin Review Action (Accept or Reject)
+app.post('/api/admin/review-kyc', async (req, res) => {
     try {
-        const { telegramId, status } = req.body; // status can be 'approved' or 'rejected'
-        const user = await User.findOneAndUpdate(
-            { telegramId },
-            { kycStatus: status },
-            { new: true }
-        );
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+        const { userId, action } = req.body; // action: 'approved' or 'rejected'
+        
+        if (!['approved', 'rejected'].includes(action)) {
+            return res.status(400).json({ success: false, error: 'Invalid action parameter' });
         }
-        res.json({ success: true, user });
+        
+        await db.collection('users').updateOne(
+            { userId: userId },
+            { 
+                $set: { 
+                    kycStatus: action,
+                    reviewedAt: new Date()
+                } 
+            }
+        );
+        
+        res.json({ success: true, status: action });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
