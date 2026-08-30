@@ -2,15 +2,25 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
-// Configure file uploads
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Serve uploaded files publicly
+app.use('/uploads', express.static(uploadDir));
+
+// Configure file uploads to the uploads folder
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, __dirname),
+    destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage });
@@ -44,8 +54,8 @@ app.post('/api/verify-id', upload.fields([{ name: 'frontId', maxCount: 1 }, { na
     try {
         const { username, fullName, email, phone, binanceId } = req.body;
         
-        const frontIdPath = req.files['frontId'] ? req.files['frontId'][0].filename : '';
-        const backIdPath = req.files['backId'] ? req.files['backId'][0].filename : '';
+        const frontIdPath = req.files['frontId'] ? `uploads/${req.files['frontId'][0].filename}` : '';
+        const backIdPath = req.files['backId'] ? `uploads/${req.files['backId'][0].filename}` : '';
 
         await Verification.findOneAndUpdate(
             { email },
