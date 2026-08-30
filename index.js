@@ -1,144 +1,36 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname));
-
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Serve uploaded files publicly
-app.use('/uploads', express.static(uploadDir));
-
-// Configure file uploads to the uploads folder
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage });
-
-// MongoDB Schema with Status Tracking
-const verificationSchema = new mongoose.Schema({
-    username: { type: String, required: true },
-    fullName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    phone: { type: String, required: true },
-    binanceId: { type: String, required: true },
-    frontIdPath: { type: String },
-    backIdPath: { type: String },
-    status: { type: String, default: 'pending' }, // 'pending', 'approved', 'rejected'
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Verification = mongoose.model('Verification', verificationSchema);
-
-// Serve main app and admin panel
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin.html'));
-});
-
-// Handle ID Submission & Save Data
-app.post('/api/verify-id', upload.fields([{ name: 'frontId', maxCount: 1 }, { name: 'backId', maxCount: 1 }]), async (req, res) => {
+// Verification Status Route
+app.get('/api/user/status', async (req, res) => {
     try {
-        const { username, fullName, email, phone, binanceId } = req.body;
+        const { telegramId } = req.query;
+        // Use your actual Mongoose User model here
+        const user = await User.findOne({ telegramId });
         
-        const frontIdPath = req.files['frontId'] ? `uploads/${req.files['frontId'][0].filename}` : '';
-        const backIdPath = req.files['backId'] ? `uploads/${req.files['backId'][0].filename}` : '';
+        if (!user) {
+            return res.json({ isVerified: false, hasSubmittedId: false });
+        }
+        
+        res.json({ 
+            isVerified: user.isVerified || false, 
+            hasSubmittedId: user.hasSubmittedId || false 
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
-        await Verification.findOneAndUpdate(
-            { email },
-            {
-                username,
-                fullName,
-                email,
-                phone,
-                binanceId,
-                frontIdPath,
-                backIdPath,
-                status: 'pending'
-            },
+// ID Submission Route
+app.post('/api/user/verify-id', async (req, res) => {
+    try {
+        const { telegramId, fullName, idType, idNumber } = req.body;
+        
+        await User.findOneAndUpdate(
+            { telegramId },
+            { fullName, idType, idNumber, hasSubmittedId: true, isVerified: false },
             { upsert: true, new: true }
         );
-
-        res.status(200).json({ success: true, message: 'Submitted successfully' });
+        
+        res.json({ success: true });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error during submission' });
+        res.status(500).json({ success: false, error: 'Submission failed' });
     }
 });
-
-// Check Status Endpoint (For App Startup)
-app.get('/api/user-status', async (req, res) => {
-    try {
-        const { email } = req.query;
-        if (!email) return res.status(400).json({ error: 'Email required' });
-
-        const userRecord = await Verification.findOne({ email });
-        if (!userRecord) {
-            return res.json({ status: 'unregistered' });
-        }
-
-        res.json({ status: userRecord.status });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch status' });
-    }
-});
-
-// Admin Endpoints
-app.get('/api/admin/users', async (req, res) => {
-    try {
-        const users = await Verification.find().sort({ createdAt: -1 });
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch users' });
-    }
-});
-
-app.post('/api/admin/approve', async (req, res) => {
-    try {
-        const { email } = req.body;
-        const updatedUser = await Verification.findOneAndUpdate(
-            { email },
-            { status: 'approved' },
-            { new: true }
-        );
-
-        if (!updatedUser) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json({ success: true, message: 'User approved successfully!' });
-    } catch (err) {
-        res.status(500).json({ error: 'Approval failed' });
-    }
-});
-
-app.post('/api/admin/reject', async (req, res) => {
-    try {
-        const { email } = req.body;
-        await Verification.findOneAndUpdate({ email }, { status: 'rejected' });
-        res.json({ success: true, message: 'User rejected' });
-    } catch (err) {
-        res.status(500).json({ error: 'Action failed' });
-    }
-});
-
-// Connect to MongoDB and start server
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/once-p2p')
-    .then(() => {
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-    })
-    .catch(err => console.error('Database connection error:', err));
