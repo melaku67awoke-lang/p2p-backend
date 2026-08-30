@@ -3,98 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Once P2P</title>
+    <title>Once P2P - Secure Digital Asset Trading</title>
     <style>
-        body { background-color: #0f172a; color: #fff; font-family: sans-serif; padding: 20px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 400px; margin: auto; }
-        input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: none; box-sizing: border-box; }
-        input { background: #334155; color: #fff; }
-        button { background: #10b981; color: #fff; font-weight: bold; cursor: pointer; }
+        body {
+            background-color: #0b0f19;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 440px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .logo-badge {
+            background: #10b981;
+            color: #0b0f19;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .status-pill {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .badge-sub {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        h1 {
+            font-size: 28px;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+        h1 span {
+            color: #34d399;
+        }
+        p {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .card-box {
+            background: #131c2e;
+            border: 1px solid #1e293b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .card-box h3 {
+            margin: 0 0 6px 0;
+            font-size: 15px;
+            color: #34d399;
+        }
+        .card-box p {
+            margin: 0;
+            font-size: 13px;
+        }
+        .form-card {
+            background: #131c2e;
+            border: 1px solid #1e293b;
+            padding: 20px;
+            border-radius: 16px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 14px 0;
+            background: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus {
+            border-color: #10b981;
+            outline: none;
+        }
+        label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary {
+            width: 100%;
+            background: #10b981;
+            color: #0b0f19;
+            font-weight: bold;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover {
+            background: #059669;
+        }
+        .footer-note {
+            text-align: center;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 20px;
+        }
+        .view { display: none; }
+        .view.active { display: block; }
     </style>
 </head>
 <body>
+<div class="container">
 
-    <!-- STEP 1: Registration Form -->
-    <div id="step1-container" class="card">
-        <h3>Create Account</h3>
-        <p>Register to begin trading on Once P2P.</p>
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="text" id="fullname" placeholder="Full Name" required>
-        <input type="email" id="email" placeholder="Email Address" required>
-        <input type="text" id="phone" placeholder="Phone Number" required>
-        <input type="text" id="binanceId" placeholder="Binance UID" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button onclick="goToStep2()">Register & Proceed</button>
+    <!-- Top Common Header -->
+    <div class="header">
+        <div class="logo-area">
+            <div class="logo-badge">P</div>
+            <span>Once <span style="color:#34d399;">P2P</span></span>
+        </div>
+        <div class="status-pill">Secure Escrow Live</div>
     </div>
 
-    <!-- STEP 2: ID Verification Page -->
-    <div id="step2-container" class="card" style="display: none;">
-        <h3>Verify Your Identity</h3>
-        <p>Upload clear photos of your ID document (Front and Back) to access the platform.</p>
-        
-        <label>SELECT FRONT ID</label>
-        <input type="file" id="frontIdFile" accept="image/*">
-        
-        <label>SELECT BACK ID</label>
-        <input type="file" id="backIdFile" accept="image/*">
-        
-        <button onclick="submitIdVerification()">Submit ID for Review</button>
+    <!-- VIEW 0: Gorgeous Landing Page -->
+    <div id="view-landing" class="view active">
+        <div class="badge-sub">● Exclusive Ethiopian P2P Community Gateway</div>
+        <h1>Secure, Private & Direct <span>Digital Asset Trading</span></h1>
+        <p>Trade USDT safely with local payment methods through fully encrypted escrow protection. Entry requires a verified Binance account or an exclusive member invite.</p>
+
+        <div class="card-box">
+            <h3>🔓 Escrow Protected</h3>
+            <p>Assets are safely locked until local bank transfers are fully confirmed by traders.</p>
+        </div>
+        <div class="card-box">
+            <h3>⚡ Instant Local Pay</h3>
+            <p>Seamlessly match with trusted local providers like CBE, Awash, Dashen, and Telebirr.</p>
+        </div>
+        <div class="card-box">
+            <h3>🛡️ Verified Identity</h3>
+            <p>Strict ID matching ensures a secure community free of fraud and chargeback scams.</p>
+        </div>
+
+        <button class="btn-primary" onclick="showView('view-registration')">Get Started &rarr;</button>
+        <div class="footer-note">By clicking Get Started, you agree to community safety guidelines.</div>
     </div>
 
-    <!-- STEP 3: Review in Progress -->
-    <div id="step3-container" class="card" style="display: none;">
-        <h3>Review in Progress</h3>
-        <p>Your verification documents have been successfully submitted. Please wait for admin approval to access trading features.</p>
+    <!-- VIEW 1: Registration Form -->
+    <div id="view-registration" class="view">
+        <div class="form-card">
+            <h2 style="margin-top:0; font-size:22px;">Create Account</h2>
+            <p style="margin-bottom:16px;">Register to begin trading on Once P2P.</p>
+
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Habtish@">
+
+            <label>Full Name</label>
+            <input type="text" id="fullname" placeholder="Melaku Awoke">
+
+            <label>Email</label>
+            <input type="email" id="email" placeholder="melaku61awoke@gmail.com">
+
+            <label>Phone</label>
+            <input type="tel" id="phone" placeholder="+251912207652">
+
+            <label>Binance UID</label>
+            <input type="text" id="binanceId" placeholder="Binance UID">
+
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••">
+
+            <button class="btn-primary" onclick="submitRegistration()">Register & Proceed</button>
+        </div>
     </div>
 
-    <script>
-        function goToStep2() {
-            // Validate basic fields
-            const username = document.getElementById('username').value;
-            if (!username) {
-                alert('Please fill in your username.');
-                return;
-            }
-            
-            // Save state in browser memory
-            localStorage.setItem('registered_user', username);
+    <!-- VIEW 2: ID Verification Page -->
+    <div id="view-id-upload" class="view">
+        <div class="form-card">
+            <h2 style="margin-top:0; font-size:22px;">Verify Your Identity</h2>
+            <p style="margin-bottom:16px;">Upload clear photos of your ID document (Front and Back) to access the platform.</p>
 
-            // Switch views
-            document.getElementById('step1-container').style.display = 'none';
-            document.getElementById('step2-container').style.display = 'block';
+            <label>Select Front ID / Passport</label>
+            <input type="file" id="frontIdFile" accept="image/*">
+
+            <label>Select Back ID / Passport</label>
+            <input type="file" id="backIdFile" accept="image/*">
+
+            <button class="btn-primary" onclick="submitIdVerification()">Submit ID for Review</button>
+        </div>
+    </div>
+
+    <!-- VIEW 3: Review Window -->
+    <div id="view-review" class="view">
+        <div class="form-card" style="text-align: center; padding: 30px 20px;">
+            <h2 style="color: #34d399; margin-top:0;">Review in Progress</h2>
+            <p>Your verification documents have been successfully submitted. Please wait for admin approval to access trading features.</p>
+        </div>
+    </div>
+
+    <!-- VIEW 4: Marketplace (Unlocked) -->
+    <div id="view-marketplace" class="view">
+        <div class="form-card">
+            <h2 style="color: #34d399; margin-top:0;">P2P Marketplace</h2>
+            <p>Welcome to active trading! Your account is fully verified.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function showView(viewId) {
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+    }
+
+    function submitRegistration() {
+        const username = document.getElementById('username').value;
+        const fullname = document.getElementById('fullname').value;
+        const email = document.getElementById('email').value;
+
+        if (!username || !fullname || !email) {
+            alert('Please fill out the required registration fields.');
+            return;
         }
 
-        async function submitIdVerification() {
-            const frontInput = document.getElementById('frontIdFile').files[0];
-            const backInput = document.getElementById('backIdFile').files[0];
+        localStorage.setItem('p2p_username', username);
+        showView('view-id-upload');
+    }
 
-            if (!frontInput || !backInput) {
-                alert('Please select both front and back ID images.');
-                return;
-            }
+    async function submitIdVerification() {
+        const frontInput = document.getElementById('frontIdFile').files[0];
+        const backInput = document.getElementById('backIdFile').files[0];
 
-            const formData = new FormData();
-            formData.append('frontId', frontInput);
-            formData.append('backId', backInput);
-            formData.append('username', localStorage.getItem('registered_user') || 'user');
-
-            try {
-                const response = await fetch('/api/verify-id', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    document.getElementById('step2-container').style.display = 'none';
-                    document.getElementById('step3-container').style.display = 'block';
-                } else {
-                    alert('Upload failed. Please try again.');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Network error during upload.');
-            }
+        if (!frontInput || !backInput) {
+            alert('Please select both front and back ID images.');
+            return;
         }
-    </script>
+
+        const formData = new FormData();
+        formData.append('frontId', frontInput);
+        formData.append('backId', backInput);
+        formData.append('username', localStorage.getItem('p2p_username') || 'user');
+
+        try {
+            const response = await fetch('/api/verify-id', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                showView('view-review');
+            } else {
+                alert('Upload failed. Please try again.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Network error during upload.');
+        }
+    }
+</script>
 </body>
 </html>
