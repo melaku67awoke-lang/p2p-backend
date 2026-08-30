@@ -236,6 +236,25 @@
 </div>
 
 <script>
+    // Automatically check user status on app load
+    window.addEventListener('DOMContentLoaded', async () => {
+        const savedEmail = localStorage.getItem('p2p_email');
+        if (!savedEmail) return; // Keep landing page if no registration email exists
+
+        try {
+            const response = await fetch(`/api/user-status?email=${encodeURIComponent(savedEmail)}`);
+            const data = await response.json();
+
+            if (data.status === 'approved') {
+                showView('view-marketplace'); // Skip landing & verification entirely
+            } else if (data.status === 'pending') {
+                showView('view-review'); // Show review screen if still pending
+            }
+        } catch (err) {
+            console.error('Failed to check user status:', err);
+        }
+    });
+
     function showView(viewId) {
         document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
@@ -251,13 +270,21 @@
             return;
         }
 
+        // Save credentials locally for future status checks
+        localStorage.setItem('p2p_email', email);
         localStorage.setItem('p2p_username', username);
+
         showView('view-id-upload');
     }
 
     async function submitIdVerification() {
         const frontInput = document.getElementById('frontIdFile').files[0];
         const backInput = document.getElementById('backIdFile').files[0];
+        const username = localStorage.getItem('p2p_username') || document.getElementById('username').value;
+        const fullname = document.getElementById('fullname').value || '';
+        const email = localStorage.getItem('p2p_email') || document.getElementById('email').value;
+        const phone = document.getElementById('phone') ? document.getElementById('phone').value : '';
+        const binanceId = document.getElementById('binanceId') ? document.getElementById('binanceId').value : '';
 
         if (!frontInput || !backInput) {
             alert('Please select both front and back ID images.');
@@ -267,7 +294,11 @@
         const formData = new FormData();
         formData.append('frontId', frontInput);
         formData.append('backId', backInput);
-        formData.append('username', localStorage.getItem('p2p_username') || 'user');
+        formData.append('username', username);
+        formData.append('fullName', fullname);
+        formData.append('email', email);
+        formData.append('phone', phone);
+        formData.append('binanceId', binanceId);
 
         try {
             const response = await fetch('/api/verify-id', {
