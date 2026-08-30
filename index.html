@@ -1,134 +1,322 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Once P2P</title>
-    <!-- Telegram WebApp Script -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Once P2P - Secure Telegram P2P Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FACC15', // Amber / Yellow accent
+                        cardbg: '#111827',
+                        darkbg: '#030712'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            background-color: #0d1117;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .app-view {
-            display: none;
-            width: 100%;
-            max-width: 400px;
-            background: #161b22;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-        .card-box {
-            background: #21262d;
-            border: 1px solid #30363d;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        h2 { color: #2ea043; margin-top: 0; }
-        button {
-            background-color: #2ea043;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-        }
-        button:hover { background-color: #238636; }
+        body { background-color: #030712; color: #F3F4F6; font-family: system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between selection:bg-primary selection:text-slate-950">
 
-    <!-- 1. Registration / Landing View -->
-    <div id="registration-view" class="app-view">
-        <h2>Welcome to Once P2P</h2>
-        <p>Please register and submit your ID to start trading securely.</p>
-        <button onclick="submitRegistration()">Register & Submit ID</button>
+    <!-- VIEW 1: WELCOME / LANDING -->
+    <div id="view-welcome" class="view-container flex flex-col min-h-screen justify-between">
+        <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-slate-900 text-lg">P</div>
+                    <span class="text-xl font-extrabold tracking-wide text-white">Once <span class="text-primary">P2P</span></span>
+                </div>
+                <button onclick="switchView('view-reg1')" class="px-4 py-2 rounded-xl bg-primary hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shadow-lg cursor-pointer">
+                    Get Started
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-4xl mx-auto px-6 py-16 flex flex-col items-center text-center justify-center space-y-8">
+            <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs text-amber-400 font-medium">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Secure Telegram P2P Trading Gateway</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white max-w-2xl leading-tight">
+                Seamless & Secure <span class="text-primary">Crypto P2P</span> Trading
+            </h1>
+            <p class="text-slate-400 text-base md:text-lg max-w-xl">
+                Trade safely with verified community members. Integrated escrow protocols, Binance UID validation, and instant chat connectivity.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 w-full justify-center pt-4">
+                <button onclick="switchView('view-reg1')" class="px-8 py-4 rounded-2xl bg-primary hover:bg-amber-400 text-slate-950 font-bold text-base transition-all shadow-xl cursor-pointer">
+                    Create Account / Register
+                </button>
+                <button onclick="switchView('view-mainapp')" class="px-8 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-base border border-slate-800 transition-all cursor-pointer">
+                    Browse Marketplace
+                </button>
+            </div>
+        </main>
+
+        <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+            <p>&copy; 2026 Once P2P Community Gateway. All rights reserved.</p>
+        </footer>
     </div>
 
-    <!-- 2. Review in Progress View -->
-    <div id="review-pending-view" class="app-view">
-        <div class="card-box">
-            <h2>Review in Progress</h2>
-            <p>Your verification documents have been successfully submitted. Please wait for admin approval to access trading features.</p>
-        </div>
+
+    <!-- VIEW 2: REGISTRATION STEP 1 (Basic Info & Binance UID) -->
+    <div id="view-reg1" class="view-container hidden flex-col min-h-screen justify-between">
+        <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-slate-900 text-lg">P</div>
+                    <span class="text-xl font-extrabold tracking-wide text-white">Once <span class="text-primary">P2P</span></span>
+                </div>
+                <div class="text-xs text-slate-400 font-semibold">Step 1 of 2</div>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-md mx-auto px-6 py-12 w-full flex flex-col justify-center">
+            <div class="bg-cardbg p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-black text-white">Account Details</h2>
+                    <p class="text-sm text-slate-400">Enter your Telegram handle and Binance UID to begin verification.</p>
+                </div>
+                <form class="space-y-4" onsubmit="event.preventDefault(); switchView('view-reg2');">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Telegram Username</label>
+                        <input type="text" required placeholder="@username" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Binance UID</label>
+                        <input type="text" required placeholder="e.g. 984231024" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary">
+                    </div>
+                    <button type="submit" class="w-full py-4 rounded-xl bg-primary hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shadow-lg cursor-pointer mt-2">
+                        Continue to ID Upload
+                    </button>
+                </form>
+                <div class="text-center">
+                    <button onclick="switchView('view-welcome')" class="text-xs text-slate-500 hover:text-slate-400">Back to Home</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+            <p>&copy; 2026 Once P2P Community Gateway. All rights reserved.</p>
+        </footer>
     </div>
 
-    <!-- 3. Marketplace View -->
-    <div id="marketplace-view" class="app-view" style="max-width: 600px;">
-        <h2>Once P2P Marketplace</h2>
-        <p>Secure Escrow Live. Active trading market.</p>
-        <div class="card-box">
-            <p>Available Offers & Trading Interface</p>
-        </div>
+
+    <!-- VIEW 3: REGISTRATION STEP 2 (ID Document Upload) -->
+    <div id="view-reg2" class="view-container hidden flex-col min-h-screen justify-between">
+        <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-slate-900 text-lg">P</div>
+                    <span class="text-xl font-extrabold tracking-wide text-white">Once <span class="text-primary">P2P</span></span>
+                </div>
+                <div class="text-xs text-slate-400 font-semibold">Step 2 of 2</div>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-md mx-auto px-6 py-12 w-full flex flex-col justify-center">
+            <div class="bg-cardbg p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-black text-white">Identity Verification</h2>
+                    <p class="text-sm text-slate-400">Upload a clear photo of your government-issued ID or Passport.</p>
+                </div>
+                <form class="space-y-4" onsubmit="event.preventDefault(); submitIdVerification();">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Document Type</label>
+                        <select class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary">
+                            <option>National ID Card</option>
+                            <option>Passport</option>
+                            <option>Driver's License</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Upload File</label>
+                        <input type="file" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-slate-950 hover:file:bg-amber-400 cursor-pointer">
+                    </div>
+                    <button type="submit" class="w-full py-4 rounded-xl bg-primary hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shadow-lg cursor-pointer mt-2">
+                        Submit for Verification
+                    </button>
+                </form>
+                <div class="text-center">
+                    <button onclick="switchView('view-reg1')" class="text-xs text-slate-500 hover:text-slate-400">Back to Step 1</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+            <p>&copy; 2026 Once P2P Community Gateway. All rights reserved.</p>
+        </footer>
+    </div>
+
+
+    <!-- VIEW 4: PENDING ADMIN REVIEW -->
+    <div id="view-pending" class="view-container hidden flex-col min-h-screen justify-between">
+        <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-slate-900 text-lg">P</div>
+                    <span class="text-xl font-extrabold tracking-wide text-white">Once <span class="text-primary">P2P</span></span>
+                </div>
+                <div class="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">Under Review</div>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-md mx-auto px-6 py-12 w-full flex flex-col items-center justify-center text-center">
+            <div class="bg-cardbg p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6 w-full">
+                <div class="w-20 h-20 rounded-full border-4 border-slate-800 border-t-amber-400 flex items-center justify-center mx-auto relative animate-spin">
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-black text-white">Verification in Progress</h2>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Your ID documents and Binance UID have been submitted successfully. Our compliance team is reviewing your details.
+                    </p>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 text-xs space-y-1 text-left">
+                    <span class="text-slate-500 block uppercase text-[10px]">Estimated Review Time</span>
+                    <span class="text-white font-bold">1 - 3 Hours</span>
+                </div>
+                <button onclick="simulateAdminApproval()" class="w-full py-4 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-sm transition-all shadow-lg cursor-pointer">
+                    ⚡ [Admin Simulator] Approve ID
+                </button>
+            </div>
+        </main>
+
+        <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+            <p>&copy; 2026 Once P2P Community Gateway. All rights reserved.</p>
+        </footer>
+    </div>
+
+
+    <!-- VIEW 5: MAIN MARKETPLACE -->
+    <div id="view-mainapp" class="view-container hidden flex-col min-h-screen justify-between">
+        <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-slate-900 text-lg">P</div>
+                    <span class="text-xl font-extrabold tracking-wide text-white">Once <span class="text-primary">P2P</span></span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full font-medium">Verified Merchant</span>
+                    <button onclick="switchView('view-welcome')" class="text-xs text-slate-400 hover:text-white">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-6xl mx-auto px-6 py-8 w-full space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-black text-white">P2P Marketplace</h1>
+                    <p class="text-sm text-slate-400">Live active orders escrowed with Once P2P Gateway.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <input type="text" placeholder="Search orders..." class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary">
+                    <button class="px-4 py-2 bg-primary text-slate-950 font-bold text-sm rounded-xl hover:bg-amber-400 transition-all cursor-pointer">+ Post Offer</button>
+                </div>
+            </div>
+
+            <!-- Orders Table / List -->
+            <div class="bg-cardbg border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+                <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/40">
+                    <span class="text-sm font-bold text-white uppercase tracking-wider">Active Offers</span>
+                    <span class="text-xs text-slate-400">Showing 3 verified trades</span>
+                </div>
+                <div class="divide-y divide-slate-800 text-sm">
+                    <!-- Row 1 -->
+                    <div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-900/20 transition-all">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-white">Sell USDT</span>
+                                <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">100% Completion</span>
+                            </div>
+                            <p class="text-xs text-slate-400">Merchant: <span class="text-white font-medium">@crypto_king</span> • Bank Transfer</p>
+                        </div>
+                        <div class="flex items-center justify-between sm:justify-end space-x-6">
+                            <div class="text-right">
+                                <div class="font-bold text-white">1.00 USD / USDT</div>
+                                <div class="text-xs text-slate-400">Limit: $50 - $1,000</div>
+                            </div>
+                            <button class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all cursor-pointer">Trade</button>
+                        </div>
+                    </div>
+                    <!-- Row 2 -->
+                    <div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-900/20 transition-all">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-white">Buy USDT</span>
+                                <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">99.2% Completion</span>
+                            </div>
+                            <p class="text-xs text-slate-400">Merchant: <span class="text-white font-medium">@alex_trader</span> • Telebirr / CBE</p>
+                        </div>
+                        <div class="flex items-center justify-between sm:justify-end space-x-6">
+                            <div class="text-right">
+                                <div class="font-bold text-white">1.02 USD / USDT</div>
+                                <div class="text-xs text-slate-400">Limit: $20 - $500</div>
+                            </div>
+                            <button class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all cursor-pointer">Trade</button>
+                        </div>
+                    </div>
+                    <!-- Row 3 -->
+                    <div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-900/20 transition-all">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-white">Sell USDT</span>
+                                <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">98.5% Completion</span>
+                            </div>
+                            <p class="text-xs text-slate-400">Merchant: <span class="text-white font-medium">@fast_pay</span> • Chapa / Wallet</p>
+                        </div>
+                        <div class="flex items-center justify-between sm:justify-end space-x-6">
+                            <div class="text-right">
+                                <div class="font-bold text-white">1.01 USD / USDT</div>
+                                <div class="text-xs text-slate-400">Limit: $100 - $2,500</div>
+                            </div>
+                            <button class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all cursor-pointer">Trade</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+            <p>&copy; 2026 Once P2P Community Gateway. All rights reserved.</p>
+        </footer>
     </div>
 
     <script>
-        async function checkUserRouting() {
-            try {
-                // Get Telegram user ID from WebApp context (fallbacks to test ID if browser testing)
-                const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "test_user_123";
-                
-                const response = await fetch(`/api/user/status?telegramId=${telegramId}`, {
-                    headers: { 'telegram-id': telegramId }
-                });
-                const data = await response.json();
-
-                if (!data.success || !data.isRegistered || data.kycStatus === 'unregistered') {
-                    switchView('registration-view');
-                } else if (data.kycStatus === 'pending') {
-                    switchView('review-pending-view'); // Shows "Review in Progress" screen properly
-                } else if (data.kycStatus === 'approved') {
-                    switchView('marketplace-view'); // Directs to Marketplace only when approved
-                } else {
-                    switchView('registration-view');
-                }
-            } catch (err) {
-                console.error("Routing error:", err);
-                switchView('registration-view');
-            }
-        }
-
-        async function submitRegistration() {
-            try {
-                const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "test_user_123";
-                const response = await fetch('/api/user/submit-kyc', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegramId })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    checkUserRouting(); // Re-check routing to land on the pending review screen instantly
-                }
-            } catch (err) {
-                console.error("Submission failed:", err);
-            }
-        }
-
         function switchView(viewId) {
-            document.querySelectorAll('.app-view').forEach(el => {
-                el.style.display = 'none';
+            document.querySelectorAll('.view-container').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
             });
             const target = document.getElementById(viewId);
             if (target) {
-                target.style.display = 'block';
+                target.classList.remove('hidden');
+                target.classList.add('flex');
+                window.scrollTo(0, 0);
             }
         }
 
-        window.addEventListener('DOMContentLoaded', checkUserRouting);
+        function submitIdVerification() {
+            document.querySelectorAll('.view-container').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            });
+            const pendingView = document.getElementById('view-pending');
+            pendingView.classList.remove('hidden');
+            pendingView.classList.add('flex');
+            window.scrollTo(0, 0);
+        }
+
+        function simulateAdminApproval() {
+            localStorage.setItem('onceP2P_verified', 'true');
+            switchView('view-mainapp');
+        }
     </script>
 </body>
 </html>
