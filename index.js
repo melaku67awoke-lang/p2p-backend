@@ -1,15 +1,35 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const app = express();
+
 app.use(express.json());
 
-// In-memory or database mock connection (Replace with your actual MongoDB client/db setup)
-// Example: const db = client.db('once_p2p');
+// Connect to MongoDB Atlas using Mongoose
+mongoose.connect(process.env.MONGO_URI || 'YOUR_MONGODB_CONNECTION_STRING', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error('Database connection error:', err));
+
+// Define User Schema & Model
+const userSchema = new mongoose.Schema({
+    userId: { type: String, required: true, unique: true },
+    fullName: String,
+    phone: String,
+    binanceUid: String,
+    idImageUrl: String,
+    kycStatus: { type: String, default: 'none' }, // 'none', 'pending', 'approved', 'rejected'
+    updatedAt: { type: Date, default: Date.now },
+    reviewedAt: Date
+});
+
+const User = mongoose.model('User', userSchema);
 
 // 1. Get User Status & Route Initializer
 app.get('/api/user/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const user = await db.collection('users').findOne({ userId: userId });
+        const user = await User.findOne({ userId });
         
         if (!user) {
             return res.json({ success: true, kycStatus: 'none' });
@@ -26,19 +46,17 @@ app.post('/api/verify-id', async (req, res) => {
     try {
         const { userId, fullName, phone, binanceUid, idImageUrl } = req.body;
         
-        await db.collection('users').updateOne(
-            { userId: userId },
+        await User.findOneAndUpdate(
+            { userId },
             { 
-                $set: { 
-                    fullName, 
-                    phone, 
-                    binanceUid, 
-                    idImageUrl, 
-                    kycStatus: 'pending',
-                    updatedAt: new Date()
-                } 
+                fullName, 
+                phone, 
+                binanceUid, 
+                idImageUrl, 
+                kycStatus: 'pending',
+                updatedAt: new Date()
             },
-            { upsert: true }
+            { upsert: true, new: true }
         );
         
         res.json({ success: true, message: 'Verification submitted successfully', kycStatus: 'pending' });
@@ -56,15 +74,18 @@ app.post('/api/admin/review-kyc', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid action parameter' });
         }
         
-        await db.collection('users').updateOne(
-            { userId: userId },
+        const updatedUser = await User.findOneAndUpdate(
+            { userId },
             { 
-                $set: { 
-                    kycStatus: action,
-                    reviewedAt: new Date()
-                } 
-            }
+                kycStatus: action,
+                reviewedAt: new Date()
+            },
+            { new: true }
         );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
         
         res.json({ success: true, status: action });
     } catch (err) {
