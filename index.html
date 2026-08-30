@@ -239,16 +239,16 @@
     // Automatically check user status on app load
     window.addEventListener('DOMContentLoaded', async () => {
         const savedEmail = localStorage.getItem('p2p_email');
-        if (!savedEmail) return; // Keep landing page if no registration email exists
+        if (!savedEmail) return;
 
         try {
             const response = await fetch(`/api/user-status?email=${encodeURIComponent(savedEmail)}`);
             const data = await response.json();
 
             if (data.status === 'approved') {
-                showView('view-marketplace'); // Skip landing & verification entirely
+                showView('view-marketplace');
             } else if (data.status === 'pending') {
-                showView('view-review'); // Show review screen if still pending
+                showView('view-review');
             }
         } catch (err) {
             console.error('Failed to check user status:', err);
@@ -270,7 +270,6 @@
             return;
         }
 
-        // Save credentials locally for future status checks
         localStorage.setItem('p2p_email', email);
         localStorage.setItem('p2p_username', username);
 
