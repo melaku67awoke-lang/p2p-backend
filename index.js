@@ -6,11 +6,11 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static(__dirname)); // Serves files from root directory
 
 // Configure file uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'public/uploads/'),
+    destination: (req, file, cb) => cb(null, __dirname),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage });
@@ -24,15 +24,15 @@ const verificationSchema = new mongoose.Schema({
     binanceId: { type: String, required: true },
     frontIdPath: { type: String },
     backIdPath: { type: String },
-    status: { type: String, default: 'pending' }, // 'pending', 'approved', 'rejected'
+    status: { type: String, default: 'pending' },
     createdAt: { type: Date, default: Date.now }
 });
 
 const Verification = mongoose.model('Verification', verificationSchema);
 
-// Serve the main frontend page
+// Serve the main frontend page from root
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Handle ID Submission & Save Data
@@ -40,8 +40,8 @@ app.post('/api/verify-id', upload.fields([{ name: 'frontId', maxCount: 1 }, { na
     try {
         const { username, fullName, email, phone, binanceId } = req.body;
         
-        const frontIdPath = req.files['frontId'] ? req.files['frontId'][0].path : '';
-        const backIdPath = req.files['backId'] ? req.files['backId'][0].path : '';
+        const frontIdPath = req.files['frontId'] ? req.files['frontId'][0].filename : '';
+        const backIdPath = req.files['backId'] ? req.files['backId'][0].filename : '';
 
         await Verification.findOneAndUpdate(
             { email },
@@ -65,7 +65,7 @@ app.post('/api/verify-id', upload.fields([{ name: 'frontId', maxCount: 1 }, { na
     }
 });
 
-// Check Status Endpoint (For App Startup)
+// Check Status Endpoint
 app.get('/api/user-status', async (req, res) => {
     try {
         const { email } = req.query;
@@ -82,7 +82,7 @@ app.get('/api/user-status', async (req, res) => {
     }
 });
 
-// Admin Approval Route (Call this to approve a user)
+// Admin Approval Route
 app.post('/api/admin/approve', async (req, res) => {
     try {
         const { email } = req.body;
