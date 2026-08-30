@@ -16,12 +16,13 @@
         .container {
             max-width: 440px;
             margin: 0 auto;
+            padding-bottom: 60px;
         }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         .logo-area {
             display: flex;
@@ -55,7 +56,7 @@
             margin-bottom: 16px;
         }
         h1 {
-            font-size: 28px;
+            font-size: 26px;
             line-height: 1.2;
             margin-bottom: 12px;
         }
@@ -90,7 +91,7 @@
             padding: 20px;
             border-radius: 16px;
         }
-        input {
+        input, select {
             width: 100%;
             padding: 12px;
             margin: 8px 0 14px 0;
@@ -101,7 +102,7 @@
             box-sizing: border-box;
             font-size: 14px;
         }
-        input:focus {
+        input:focus, select:focus {
             border-color: #10b981;
             outline: none;
         }
@@ -128,11 +129,59 @@
         .btn-primary:hover {
             background: #059669;
         }
-        .footer-note {
+        .nav-tabs {
+            display: flex;
+            background: #131c2e;
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            border: 1px solid #1e293b;
+        }
+        .nav-tab {
+            flex: 1;
             text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .nav-tab.active {
+            background: #10b981;
+            color: #0b0f19;
+        }
+        .offer-item {
+            background: #131c2e;
+            border: 1px solid #1e293b;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #131c2e;
+            border-top: 1px solid #1e293b;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+        .nav-item {
+            color: #94a3b8;
             font-size: 11px;
-            color: #64748b;
-            margin-top: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .nav-item.active {
+            color: #34d399;
         }
         .view { display: none; }
         .view.active { display: block; }
@@ -170,33 +219,22 @@
         </div>
 
         <button class="btn-primary" onclick="showView('view-registration')">Get Started &rarr;</button>
-        <div class="footer-note">By clicking Get Started, you agree to community safety guidelines.</div>
     </div>
 
     <!-- VIEW 1: Registration Form -->
     <div id="view-registration" class="view">
         <div class="form-card">
             <h2 style="margin-top:0; font-size:22px;">Create Account</h2>
-            <p style="margin-bottom:16px;">Register to begin trading on Once P2P.</p>
-
             <label>Username</label>
             <input type="text" id="username" placeholder="Habtish@">
-
             <label>Full Name</label>
             <input type="text" id="fullname" placeholder="Melaku Awoke">
-
             <label>Email</label>
             <input type="email" id="email" placeholder="melaku61awoke@gmail.com">
-
             <label>Phone</label>
             <input type="tel" id="phone" placeholder="+251912207652">
-
             <label>Binance UID</label>
             <input type="text" id="binanceId" placeholder="Binance UID">
-
-            <label>Password</label>
-            <input type="password" id="password" placeholder="••••••">
-
             <button class="btn-primary" onclick="submitRegistration()">Register & Proceed</button>
         </div>
     </div>
@@ -206,13 +244,10 @@
         <div class="form-card">
             <h2 style="margin-top:0; font-size:22px;">Verify Your Identity</h2>
             <p style="margin-bottom:16px;">Upload clear photos of your ID document (Front and Back) to access the platform.</p>
-
             <label>Select Front ID / Passport</label>
             <input type="file" id="frontIdFile" accept="image/*">
-
             <label>Select Back ID / Passport</label>
             <input type="file" id="backIdFile" accept="image/*">
-
             <button class="btn-primary" onclick="submitIdVerification()">Submit ID for Review</button>
         </div>
     </div>
@@ -225,14 +260,73 @@
         </div>
     </div>
 
-    <!-- VIEW 4: Marketplace (Unlocked) -->
+    <!-- VIEW 4: Marketplace -->
     <div id="view-marketplace" class="view">
-        <div class="form-card">
-            <h2 style="color: #34d399; margin-top:0;">P2P Marketplace</h2>
-            <p>Welcome to active trading! Your account is fully verified.</p>
+        <div class="nav-tabs">
+            <div class="nav-tab active">Buy USDT</div>
+            <div class="nav-tab" onclick="alert('Switching to Sell tab')">Sell USDT</div>
+        </div>
+        <div class="offer-item">
+            <div>
+                <strong>EthioTrader</strong> <span style="font-size:11px; color:#10b981;">● 99% Completion</span>
+                <div style="font-size:16px; font-weight:bold; margin-top:4px;">138.50 ETB <span style="font-size:12px; color:#94a3b8;">/ USDT</span></div>
+                <div style="font-size:12px; color:#94a3b8; margin-top:2px;">Limits: 5,000 - 50,000 ETB</div>
+            </div>
+            <button class="btn-primary" style="width:auto; padding:8px 16px; margin:0;" onclick="alert('Initiating escrow buy order...')">Buy</button>
+        </div>
+        <div class="offer-item">
+            <div>
+                <strong>AbeshaSecure</strong> <span style="font-size:11px; color:#10b981;">● 100% Completion</span>
+                <div style="font-size:16px; font-weight:bold; margin-top:4px;">139.00 ETB <span style="font-size:12px; color:#94a3b8;">/ USDT</span></div>
+                <div style="font-size:12px; color:#94a3b8; margin-top:2px;">Limits: 10,000 - 100,000 ETB</div>
+            </div>
+            <button class="btn-primary" style="width:auto; padding:8px 16px; margin:0;" onclick="alert('Initiating escrow buy order...')">Buy</button>
         </div>
     </div>
 
+    <!-- VIEW 5: Wallet -->
+    <div id="view-wallet" class="view">
+        <div class="form-card" style="text-align: center; padding: 24px;">
+            <label>Total Estimated Balance</label>
+            <h1 style="font-size:32px; margin:10px 0;">0.00 <span style="color:#34d399; font-size:18px;">USDT</span></h1>
+            <p style="color:#94a3b8; margin-bottom:20px;">≈ 0.00 ETB</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-primary" onclick="alert('Deposit gateway initialized')">Deposit</button>
+                <button class="btn-primary" style="background:#1e293b; color:#fff;" onclick="alert('Withdrawal request initialized')">Withdraw</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 6: Orders -->
+    <div id="view-orders" class="view">
+        <h2 style="font-size:20px; color:#34d399; margin-top:0;">Active Orders</h2>
+        <div class="card-box" style="text-align:center; padding:30px;">
+            <p style="margin:0;">No active escrow orders found.</p>
+        </div>
+    </div>
+
+    <!-- VIEW 7: Ads / Post Ad -->
+    <div id="view-ads" class="view">
+        <div class="form-card">
+            <h2 style="margin-top:0; font-size:20px; color:#34d399;">Post Trading Ad</h2>
+            <label>Asset</label>
+            <select><option>USDT</option></select>
+            <label>Price per USDT (ETB)</label>
+            <input type="number" placeholder="138.50">
+            <label>Total Quantity</label>
+            <input type="number" placeholder="500">
+            <button class="btn-primary" onclick="alert('Ad successfully posted to marketplace!')">Publish Ad</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Bottom Navigation Bar (Visible only on Marketplace/Wallet/Orders/Ads) -->
+<div id="bottom-nav" class="footer-nav" style="display:none;">
+    <button class="nav-item active" onclick="switchTab('view-marketplace', this)">📈 Market</button>
+    <button class="nav-item" onclick="switchTab('view-wallet', this)">💰 Wallet</button>
+    <button class="nav-item" onclick="switchTab('view-orders', this)">📋 Orders</button>
+    <button class="nav-item" onclick="switchTab('view-ads', this)">📢 Ads</button>
 </div>
 
 <script>
@@ -246,10 +340,10 @@
 
             if (data.status === 'approved') {
                 showView('view-marketplace');
+                document.getElementById('bottom-nav').style.display = 'flex';
             } else if (data.status === 'pending') {
                 showView('view-review');
             }
-            // If rejected, it naturally stays on landing/registration so they can re-submit fresh
         } catch (err) {
             console.error('Failed to check user status:', err);
         }
@@ -258,6 +352,12 @@
     function showView(viewId) {
         document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
+    }
+
+    function switchTab(viewId, btn) {
+        showView(viewId);
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
     }
 
     function submitRegistration() {
@@ -272,18 +372,17 @@
 
         localStorage.setItem('p2p_email', email);
         localStorage.setItem('p2p_username', username);
-
         showView('view-id-upload');
     }
 
     async function submitIdVerification() {
         const frontInput = document.getElementById('frontIdFile').files[0];
         const backInput = document.getElementById('backIdFile').files[0];
-        const username = localStorage.getItem('p2p_username') || document.getElementById('username').value;
-        const fullname = document.getElementById('fullname').value || document.getElementById('username').value;
-        const email = localStorage.getItem('p2p_email') || document.getElementById('email').value;
-        const phone = document.getElementById('phone') ? document.getElementById('phone').value : 'Not Provided';
-        const binanceId = document.getElementById('binanceId') ? document.getElementById('binanceId').value : 'Not Provided';
+        const username = localStorage.getItem('p2p_username');
+        const fullname = document.getElementById('fullname').value;
+        const email = localStorage.getItem('p2p_email');
+        const phone = document.getElementById('phone').value;
+        const binanceId = document.getElementById('binanceId').value;
 
         if (!frontInput || !backInput) {
             alert('Please select both front and back ID images.');
