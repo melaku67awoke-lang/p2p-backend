@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Once P2P - Verification</title>
+    <title>Once P2P - App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -14,6 +14,7 @@
             --accent-yellow: #f59e0b;
             --accent-green: #10b981;
             --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
         }
 
         body {
@@ -38,6 +39,11 @@
             max-width: 400px;
             text-align: center;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            display: none; /* Hidden by default */
+        }
+
+        .active-view {
+            display: block;
         }
 
         .logo-area {
@@ -65,7 +71,7 @@
             font-weight: 600;
         }
 
-        .clock-icon {
+        .icon-circle {
             width: 60px;
             height: 60px;
             border: 2px solid var(--accent-yellow);
@@ -146,41 +152,70 @@
             opacity: 0.8;
         }
 
-        .btn-accept {
-            background-color: var(--accent-green);
-        }
+        .btn-accept { background-color: var(--accent-green); }
+        .btn-reject { background-color: var(--accent-red); }
+        .btn-primary { background-color: var(--accent-blue); width: 100%; }
 
-        .btn-reject {
-            background-color: var(--accent-red);
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background-color: rgba(15, 23, 42, 0.6);
+            color: #fff;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            font-size: 14px;
         }
 
         .footer {
             margin-top: 24px;
             font-size: 11px;
             color: var(--text-secondary);
-        }
-
-        /* Landing Page View */
-        #landing-page {
-            display: none;
             text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <!-- VERIFICATION PENDING VIEW -->
-    <div class="container" id="pending-view">
+    <!-- 1. LANDING / HOME VIEW (New users start here) -->
+    <div class="container active-view" id="view-landing">
+        <div class="logo-area">
+            <div class="logo-box">P</div>
+            <span style="font-weight: bold; font-size: 18px;">Once <span style="color: var(--accent-green);">P2P</span></span>
+        </div>
+        <h2>Welcome to Once P2P</h2>
+        <p>Your secure gateway for community trading. Please register or verify your identity to start trading assets.</p>
+        <button class="btn-primary" onclick="switchView('view-register')">Register / Submit ID</button>
+    </div>
+
+    <!-- 2. REGISTRATION / ID SUBMISSION VIEW -->
+    <div class="container" id="view-register">
+        <div class="logo-area">
+            <div class="logo-box">P</div>
+            <span style="font-weight: bold; font-size: 18px;">Once <span style="color: var(--accent-green);">P2P</span></span>
+        </div>
+        <h2>Identity Verification</h2>
+        <p>Please enter your details and upload/submit your ID information to proceed.</p>
+        
+        <input type="text" id="fullName" class="form-input" placeholder="Full Legal Name">
+        <input type="text" id="idNumber" class="form-input" placeholder="ID / Passport Number">
+        
+        <button class="btn-primary" onclick="submitRegistration()">Submit for Review</button>
+    </div>
+
+    <!-- 3. VERIFICATION PENDING VIEW -->
+    <div class="container" id="view-pending">
         <div class="logo-area">
             <div class="logo-box">P</div>
             <span style="font-weight: bold; font-size: 18px;">Once <span style="color: var(--accent-green);">P2P</span></span>
             <div style="margin-left: auto;" class="badge-pending">Under Review</div>
         </div>
 
-        <div class="clock-icon">⏱</div>
+        <div class="icon-circle">⏱</div>
         
         <h2>Verification Pending</h2>
-        <p>Your ID documents and registration details have been successfully submitted. Our administration team is reviewing your information for community security.</p>
+        <p>Your ID documents and registration details have been successfully submitted. Our administration team is reviewing your information.</p>
 
         <div class="status-box">
             <div class="status-row">
@@ -203,15 +238,15 @@
         </div>
     </div>
 
-    <!-- LANDING / MAIN APP VIEW (Shown after acceptance) -->
-    <div class="container" id="landing-page">
+    <!-- 4. MARKETPLACE / MAIN APP VIEW (Shown after admin approval) -->
+    <div class="container" id="view-marketplace">
         <div class="logo-area" style="justify-content: center;">
             <div class="logo-box">P</div>
             <span style="font-weight: bold; font-size: 18px;">Once <span style="color: var(--accent-green);">P2P</span></span>
         </div>
-        <h2 style="color: var(--accent-green);">Welcome to Marketplace</h2>
-        <p>Your account has been successfully verified by administration. You can now access P2P trading features.</p>
-        <button class="btn-accept" onclick="resetDemo()" style="width: 100%;">Start Trading</button>
+        <h2 style="color: var(--accent-green);">P2P Marketplace</h2>
+        <p>Your account has been successfully verified by administration. You can trade securely now.</p>
+        <button class="btn-reject" onclick="resetDemo()" style="width: 100%;">Reset Demo Session</button>
     </div>
 
     <div class="footer">
@@ -229,48 +264,69 @@
         // Get current user ID (falls back to a mock regular user ID if tested outside Telegram)
         const currentUserId = tg.initDataUnsafe?.user?.id || 99999999; 
 
+        function switchView(viewId) {
+            document.querySelectorAll('.container').forEach(el => el.classList.remove('active-view'));
+            document.getElementById(viewId).classList.add('active-view');
+        }
+
         function checkUserState() {
-            // Check LocalStorage to persist state across closing and reopening the Mini App
             const savedStatus = localStorage.getItem('once_p2p_verification_status');
 
             if (savedStatus === 'approved') {
-                showLandingPage();
+                switchView('view-marketplace');
                 return;
             }
 
-            // Check if current user is admin
+            if (savedStatus === 'pending') {
+                showPendingView();
+                return;
+            }
+
+            // Default state for brand new users
+            switchView('view-landing');
+        }
+
+        function submitRegistration() {
+            const name = document.getElementById('fullName').value;
+            const idNum = document.getElementById('idNumber').value;
+
+            if (!name || !idNum) {
+                alert('Please fill in all registration fields.');
+                return;
+            }
+
+            // Save state as pending
+            localStorage.setItem('once_p2p_verification_status', 'pending');
+            showPendingView();
+        }
+
+        function showPendingView() {
+            switchView('view-pending');
+
+            // Check if current user is admin to conditionally show control buttons
             if (Number(currentUserId) === Number(ADMIN_TELEGRAM_ID)) {
-                // Show admin control buttons ONLY for the admin
                 document.getElementById('admin-controls').style.display = 'block';
             } else {
-                // Keep hidden for normal users
                 document.getElementById('admin-controls').style.display = 'none';
             }
         }
 
         function handleAdminAction(action) {
             if (action === 'approved') {
-                // Save status persistently so reopening the app loads the landing page directly
                 localStorage.setItem('once_p2p_verification_status', 'approved');
-                showLandingPage();
+                switchView('view-marketplace');
             } else {
                 alert('User verification rejected.');
                 localStorage.setItem('once_p2p_verification_status', 'rejected');
+                switchView('view-landing');
             }
         }
 
-        function showLandingPage() {
-            document.getElementById('pending-view').style.display = 'none';
-            document.getElementById('landing-page').style.display = 'block';
-        }
-
         function resetDemo() {
-            // Utility helper to reset state for testing purposes
             localStorage.removeItem('once_p2p_verification_status');
             location.reload();
         }
 
-        // Run check on load
         window.onload = checkUserState;
     </script>
 </body>
