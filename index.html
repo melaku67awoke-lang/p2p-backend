@@ -3,241 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Once P2P</title>
+    <title>Once P2P - Secure Trading</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        darkbg: '#0B0F19',
+                        cardbg: '#131827',
+                        inputbg: '#1A2234'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+<body class="bg-darkbg text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-primary selection:text-slate-950">
 
-    <!-- TOP NAVIGATION / ADMIN SWITCH -->
-    <header class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900">
-        <h1 class="font-bold text-xl text-amber-500">Once P2P</h1>
-        <button onclick="toggleAdminView()" class="text-xs bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition">
-            Toggle Admin Panel
-        </button>
+    <!-- Top Navigation Bar -->
+    <header class="w-full bg-cardbg/80 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-primary text-sm">P</div>
+            <div>
+                <h1 class="font-bold text-xs tracking-wide text-white">Once <span class="text-primary">P2P</span></h1>
+                <span class="text-[9px] text-slate-400 block -mt-0.5">Secure Escrow Node</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span id="navStatusBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Review Pending</span>
+        </div>
     </header>
 
-    <main class="max-w-md mx-auto p-4 pb-20">
-
-        <!-- 1. LANDING VIEW (Unverified / Rejected) -->
-        <section id="view-landing" class="hidden text-center space-y-6 py-8">
-            <div class="space-y-2">
-                <h2 class="text-2xl font-extrabold text-white">Welcome to Once P2P</h2>
-                <p class="text-sm text-slate-400">Secure crypto P2P gateway. Complete ID verification to begin trading.</p>
-            </div>
-
-            <div id="status-alert-rejected" class="hidden p-3 bg-red-950/60 border border-red-800 rounded-xl text-xs text-red-300">
-                Your previous verification was rejected. Please resubmit your document details.
-            </div>
-
-            <button onclick="navigate('verification')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold py-3 rounded-xl transition shadow-lg shadow-amber-500/10">
-                Start ID Verification
-            </button>
-        </section>
-
-        <!-- 2. ID VERIFICATION VIEW -->
-        <section id="view-verification" class="hidden space-y-5">
-            <div>
-                <h2 class="text-xl font-bold">Identity Verification</h2>
-                <p class="text-xs text-slate-400">Upload your National ID or Passport to verify your account.</p>
-            </div>
-
-            <form id="id-form" onsubmit="handleVerificationSubmit(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Full Name</label>
-                    <input type="text" id="id-name" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500" placeholder="Enter full legal name">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">ID / Passport Number</label>
-                    <input type="text" id="id-number" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500" placeholder="e.g. ETH-9876543">
-                </div>
-
-                <div class="border-2 border-dashed border-slate-800 rounded-xl p-6 text-center bg-slate-900/40">
-                    <p class="text-xs text-slate-400">Document Upload Simulated</p>
-                    <span class="text-xs text-amber-500 font-medium">Click to select document photo</span>
-                </div>
-
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold py-3 rounded-xl transition">
-                    Submit Verification
-                </button>
-            </form>
-        </section>
-
-        <!-- 3. PENDING VIEW -->
-        <section id="view-pending" class="hidden text-center space-y-4 py-12">
-            <div class="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-full flex items-center justify-center mx-auto animate-pulse text-2xl">
-                ⏳
-            </div>
-            <h2 class="text-xl font-bold">Verification Pending</h2>
-            <p class="text-xs text-slate-400 max-w-xs mx-auto">Your identity documents are currently under review by an administrator. Check back shortly.</p>
-        </section>
-
-        <!-- 4. MARKETPLACE VIEW (Verified Users Only) -->
-        <section id="view-marketplace" class="hidden space-y-4">
-            <div class="flex justify-between items-center bg-emerald-950/40 border border-emerald-800/50 p-3 rounded-xl">
-                <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Verified Trader Account
-                </span>
-                <button onclick="resetAppStatus()" class="text-[10px] text-slate-400 hover:text-slate-200 underline">Reset Demo Status</button>
-            </div>
-
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold">P2P Marketplace</h2>
-                <span class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-md">USDT / ETB</span>
-            </div>
-
-            <!-- Orders Feed -->
-            <div class="space-y-3">
-                <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center">
-                    <div>
-                        <span class="text-xs text-emerald-400 font-bold">SELL USDT</span>
-                        <p class="font-bold text-lg mt-0.5">138.50 ETB</p>
-                        <p class="text-xs text-slate-400">Limit: 50 - 1,000 USDT</p>
-                    </div>
-                    <button class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition">Buy USDT</button>
-                </div>
-
-                <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center">
-                    <div>
-                        <span class="text-xs text-rose-400 font-bold">BUY USDT</span>
-                        <p class="font-bold text-lg mt-0.5">137.90 ETB</p>
-                        <p class="text-xs text-slate-400">Limit: 100 - 500 USDT</p>
-                    </div>
-                    <button class="bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition">Sell USDT</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- 5. ADMIN REVIEW PANEL -->
-        <section id="view-admin" class="hidden space-y-4 border-t-2 border-amber-500/40 pt-4 mt-6">
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-                <h3 class="font-bold text-sm text-amber-500 mb-2">Admin Review Queue</h3>
-                
-                <div id="admin-empty-state" class="text-xs text-slate-500 py-4 text-center">
-                    No verification requests pending.
-                </div>
-
-                <div id="admin-card" class="hidden space-y-3 border-t border-slate-800 pt-3">
-                    <div class="text-xs space-y-1">
-                        <p><span class="text-slate-400">Applicant:</span> <strong id="admin-user-name" class="text-slate-200">--</strong></p>
-                        <p><span class="text-slate-400">ID Number:</span> <strong id="admin-user-id" class="text-slate-200">--</strong></p>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <button onclick="adminDecision(true)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-2 rounded-lg transition">
-                            Accept (Verify)
-                        </button>
-                        <button onclick="adminDecision(false)" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs py-2 rounded-lg transition">
-                            Reject
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
+    <!-- Main Dynamic View Container -->
+    <main id="appContainer" class="flex-1 max-w-md w-full mx-auto p-4 flex flex-col justify-center">
+        <!-- Rendered dynamically by JavaScript -->
     </main>
 
+    <!-- Footer -->
+    <footer class="w-full text-center py-3 border-t border-slate-800/50 text-[10px] text-slate-500">
+        Once P2P Secure Node • Encrypted Connection
+    </footer>
+
+    <!-- JavaScript Application Core -->
     <script>
-        // Application State Engine
-        let state = {
-            status: localStorage.getItem('p2p_user_status') || 'unverified', // 'unverified', 'pending', 'verified', 'rejected'
-            userName: localStorage.getItem('p2p_user_name') || '',
-            userIdNum: localStorage.getItem('p2p_user_id') || ''
+        // State Management with LocalStorage persistence for ID verification flow
+        let appState = {
+            step: localStorage.getItem('once_p2p_step') || 'id_upload', // 'id_upload' or 'review_pending'
+            frontIdName: localStorage.getItem('once_p2p_front_name') || null,
+            backIdName: localStorage.getItem('once_p2p_back_name') || null
         };
 
-        function initApp() {
-            // Rule: When verified user opens app, go directly to Marketplace
-            if (state.status === 'verified') {
-                showView('marketplace');
-            } else if (state.status === 'pending') {
-                showView('pending');
-                populateAdminQueue();
-            } else if (state.status === 'rejected') {
-                document.getElementById('status-alert-rejected').classList.remove('hidden');
-                showView('landing');
-            } else {
-                showView('landing');
+        function render() {
+            const container = document.getElementById('appContainer');
+            const badge = document.getElementById('navStatusBadge');
+
+            if (appState.step === 'id_upload') {
+                badge.innerText = 'Identity Verification';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20';
+                
+                container.innerHTML = `
+                    <div class="bg-cardbg border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
+                        <div class="text-center space-y-1">
+                            <h2 class="text-sm font-bold text-white">KYC Identity Verification</h2>
+                            <p class="text-[11px] text-slate-400">Please upload clear photos of the front and back of your official government-issued ID.</p>
+                        </div>
+
+                        <!-- Front ID Upload -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-semibold text-slate-300 block">Front Side of ID</label>
+                            <div onclick="document.getElementById('frontFile').click()" class="border-2 border-dashed border-slate-700 hover:border-primary/60 bg-inputbg rounded-xl p-4 text-center cursor-pointer transition-all group">
+                                <input type="file" id="frontFile" accept="image/*" class="hidden" onchange="handleFileSelect('front', event)">
+                                <div id="frontPreviewContainer" class="text-xs text-slate-400 group-hover:text-slate-200">
+                                    <span class="block text-primary font-bold text-lg mb-1">+</span>
+                                    <span id="frontFileName">${appState.frontIdName ? 'Uploaded: ' + appState.frontIdName : 'Tap to upload Front ID'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Back ID Upload -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-semibold text-slate-300 block">Back Side of ID</label>
+                            <div onclick="document.getElementById('backFile').click()" class="border-2 border-dashed border-slate-700 hover:border-primary/60 bg-inputbg rounded-xl p-4 text-center cursor-pointer transition-all group">
+                                <input type="file" id="backFile" accept="image/*" class="hidden" onchange="handleFileSelect('back', event)">
+                                <div id="backPreviewContainer" class="text-xs text-slate-400 group-hover:text-slate-200">
+                                    <span class="block text-primary font-bold text-lg mb-1">+</span>
+                                    <span id="backFileName">${appState.backIdName ? 'Uploaded: ' + appState.backIdName : 'Tap to upload Back ID'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="submitIdBtn" onclick="submitVerification()" disabled class="w-full py-3 rounded-xl bg-slate-800 text-slate-500 font-bold text-xs transition-all cursor-not-allowed mt-2">
+                            Submit Documents
+                        </button>
+                    </div>
+                `;
+                checkFormValidity();
+            } else if (appState.step === 'review_pending') {
+                badge.innerText = 'Review Pending';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20';
+
+                container.innerHTML = `
+                    <div class="bg-cardbg border border-slate-800/80 rounded-2xl p-6 shadow-2xl text-center space-y-5">
+                        <div class="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner shadow-amber-500/20 animate-pulse">
+                            ⏳
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <h2 class="text-base font-bold text-white tracking-wide">ID Verification Under Review</h2>
+                            <p class="text-[11px] text-slate-400 leading-relaxed px-2">Your identity documents have been submitted securely. Our compliance team is cross-checking your legal details.</p>
+                        </div>
+
+                        <div class="bg-inputbg border border-slate-800/80 rounded-xl p-4 text-left space-y-3 text-xs">
+                            <div class="flex justify-between items-center border-b border-slate-800/80 pb-2.5">
+                                <span class="text-slate-400">Status:</span>
+                                <span class="font-bold text-amber-400">Pending Manual Audit</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-slate-800/80 pb-2.5">
+                                <span class="text-slate-400">Estimated Time:</span>
+                                <span class="font-bold text-slate-200">1 - 24 Hours</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Security Check:</span>
+                                <span class="font-bold text-primary">Encrypted & Queued</span>
+                            </div>
+                        </div>
+
+                        <button onclick="resetTestingState()" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer border border-slate-700/50">
+                            Reset Status (For Testing)
+                        </button>
+
+                        <p class="text-[10px] text-slate-500 px-4">
+                            You will receive a notification in Telegram once your account verification status is updated.
+                        </p>
+                    </div>
+                `;
             }
         }
 
-        function showView(viewName) {
-            const views = ['landing', 'verification', 'pending', 'marketplace'];
-            views.forEach(v => {
-                document.getElementById(`view-${v}`).classList.add('hidden');
-            });
-            document.getElementById(`view-${viewName}`).classList.remove('hidden');
-        }
-
-        function navigate(viewName) {
-            showView(viewName);
-        }
-
-        function handleVerificationSubmit(event) {
-            event.preventDefault();
-            state.userName = document.getElementById('id-name').value;
-            state.userIdNum = document.getElementById('id-number').value;
-            state.status = 'pending';
-
-            saveState();
-            showView('pending');
-            populateAdminQueue();
-        }
-
-        function populateAdminQueue() {
-            const adminCard = document.getElementById('admin-card');
-            const emptyState = document.getElementById('admin-empty-state');
-            
-            if (state.status === 'pending') {
-                document.getElementById('admin-user-name').innerText = state.userName || 'Demo User';
-                document.getElementById('admin-user-id').innerText = state.userIdNum || 'ETH-12345';
-                adminCard.classList.remove('hidden');
-                emptyState.classList.add('hidden');
-            } else {
-                adminCard.classList.add('hidden');
-                emptyState.classList.remove('hidden');
+        function handleFileSelect(side, event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (side === 'front') {
+                    appState.frontIdName = file.name;
+                    localStorage.setItem('once_p2p_front_name', file.name);
+                    document.getElementById('frontFileName').innerText = 'Uploaded: ' + file.name;
+                    document.getElementById('frontFileName').className = 'text-primary font-bold';
+                } else {
+                    appState.backIdName = file.name;
+                    localStorage.setItem('once_p2p_back_name', file.name);
+                    document.getElementById('backFileName').innerText = 'Uploaded: ' + file.name;
+                    document.getElementById('backFileName').className = 'text-primary font-bold';
+                }
+                checkFormValidity();
             }
         }
 
-        function adminDecision(isAccepted) {
-            if (isAccepted) {
-                // RULE: If accepted -> Direct to Marketplace & set verified
-                state.status = 'verified';
-                saveState();
-                showView('marketplace');
+        function checkFormValidity() {
+            const btn = document.getElementById('submitIdBtn');
+            if (!btn) return;
+            if (appState.frontIdName && appState.backIdName) {
+                btn.disabled = false;
+                btn.className = "w-full py-3 rounded-xl bg-primary hover:bg-emerald-600 text-slate-950 font-bold text-xs transition-all cursor-pointer mt-2 shadow-lg shadow-emerald-500/20";
             } else {
-                // RULE: If rejected -> Direct back to Landing Page
-                state.status = 'rejected';
-                saveState();
-                document.getElementById('status-alert-rejected').classList.remove('hidden');
-                showView('landing');
+                btn.disabled = true;
+                btn.className = "w-full py-3 rounded-xl bg-slate-800 text-slate-500 font-bold text-xs transition-all cursor-not-allowed mt-2";
             }
-            populateAdminQueue();
         }
 
-        function toggleAdminView() {
-            const adminSec = document.getElementById('view-admin');
-            adminSec.classList.toggle('hidden');
-            populateAdminQueue();
+        function submitVerification() {
+            appState.step = 'review_pending';
+            localStorage.setItem('once_p2p_step', 'review_pending');
+            render();
         }
 
-        function saveState() {
-            localStorage.setItem('p2p_user_status', state.status);
-            localStorage.setItem('p2p_user_name', state.userName);
-            localStorage.setItem('p2p_user_id', state.userIdNum);
+        function resetTestingState() {
+            appState.step = 'id_upload';
+            appState.frontIdName = null;
+            appState.backIdName = null;
+            localStorage.removeItem('once_p2p_step');
+            localStorage.removeItem('once_p2p_front_name');
+            localStorage.removeItem('once_p2p_back_name');
+            render();
         }
 
-        function resetAppStatus() {
-            localStorage.clear();
-            state.status = 'unverified';
-            state.userName = '';
-            state.userIdNum = '';
-            document.getElementById('status-alert-rejected').classList.add('hidden');
-            showView('landing');
-            populateAdminQueue();
-        }
-
-        // Initialize view state on startup
-        initApp();
+        // Initialize view on load
+        window.onload = function() {
+            render();
+        };
     </script>
 </body>
 </html>
