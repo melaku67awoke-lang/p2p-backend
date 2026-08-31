@@ -1,8 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
+
+// Serve frontend static files from a folder named 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/once-p2p', {
@@ -27,11 +31,6 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', userSchema);
-
-// Root Route to prevent "Cannot GET /" errors
-app.get('/', (req, res) => {
-  res.json({ status: 'online', message: 'Once P2P Backend API is running.' });
-});
 
 // Middleware to Check Verification and Routing Status
 const enforceVerificationLock = async (req, res, next) => {
@@ -144,6 +143,11 @@ app.get('/api/marketplace', enforceVerificationLock, (req, res) => {
   }
 
   res.json({ success: true, data: 'Welcome to the Marketplace items list.' });
+});
+
+// Fallback to serve index.html for frontend routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
