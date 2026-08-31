@@ -1,59 +1,43 @@
 const express = require('express');
-const path = require('path');
+const TelegramBot = require('node-telegram-bot-api');
+
+// Replace with your actual Telegram Bot Token from BotFather
+const token = process.env.TELEGRAM_BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
+
+// Create a bot that uses 'polling' to fetch new updates
+const bot = new TelegramBot(token, { polling: true });
+
 const app = express();
-
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// In-memory mock database for users, ads, and orders (or connect to your MongoDB Atlas here)
-let users = [
-    { id: 1, name: "Melaku Awoke", verified: true, balance: 1250.00 }
-];
+let users = [];
 
-let ads = [
-    { id: 1, type: 'sell', price: 189.50, amount: 500, merchant: 'CryptoKing', verified: true },
-    { id: 2, type: 'buy', price: 188.00, amount: 350, merchant: 'EthioTrader', verified: true }
-];
+// Listen for any kind of message
+bot.on('message', (msg) => {
+    const chatId = msg.chat.id;
+    const name = msg.from.first_name || "Trader";
+    
+    // Auto-verify user instantly on start/message
+    let existingUser = users.find(u => u.chatId === chatId);
+    if (!existingUser) {
+        users.push({ chatId, name, verified: true, balance: 0.00 });
+    }
 
-// Instant automatic verification middleware / endpoint
-app.post('/api/register', (req, res) => {
-    const { name } = req.body;
-    const newUser = {
-        id: users.length + 1,
-        name: name || "New User",
-        verified: true, // Instantly verified, zero waiting time!
-        balance: 0.00
-    };
-    users.push(newUser);
-    res.json({ success: true, message: "Account created and instantly verified!", user: newUser });
+    bot.sendMessage(chatId, `Welcome to Once P2P, ${name}! Your account is **instantly verified**. Tap the button below to open the marketplace.`, {
+        parse_mode: "Markdown",
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "🚀 Open P2P Marketplace", web_app: { url: "https://your-frontend-url.onrender.com" } }]
+            ]
+        }
+    });
 });
 
-// Get marketplace data
-app.get('/api/ads', (req, res) => {
-    res.json(ads);
-});
-
-// Create ad endpoint
-app.post('/api/ads', (req, res) => {
-    const { type, price, amount, merchant } = req.body;
-    const newAd = {
-        id: Date.now(),
-        type: type || 'sell',
-        price: parseFloat(price) || 189.00,
-        amount: parseFloat(amount) || 50.00,
-        merchant: merchant || 'Melaku Awoke',
-        verified: true
-    };
-    ads.push(newAd);
-    res.json({ success: true, ad: newAd });
-});
-
-// Basic health check route
 app.get('/health', (req, res) => {
-    res.status(200).send('OK');
+    res.status(200).send('Bot is running and active!');
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server and Telegram Bot running on port ${PORT}`);
 });
