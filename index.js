@@ -6,7 +6,13 @@ const app = express();
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// User Schema with strict verification statuses
+// Replace with your actual MongoDB connection string
+const MONGO_URI = process.env.MONGO_URI || 'YOUR_MONGODB_CONNECTION_STRING';
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
 const userSchema = new mongoose.Schema({
     telegramId: { type: String, required: true, unique: true },
     verificationStatus: { 
@@ -18,29 +24,35 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Endpoint to retrieve active user verification state
+// API to check verification status and route accordingly
 app.get('/api/user/status', async (req, res) => {
     try {
         const userId = req.query.userId || req.headers['x-user-id'];
         if (!userId) {
-            return res.status(400).json({ error: 'Missing user ID parameter' });
+            return res.status(400).json({ error: 'Missing user ID' });
         }
 
-        const user = await User.findOne({ telegramId: userId });
+        let user = await User.findOne({ telegramId: userId });
+        
+        // If user doesn't exist yet, create them as pending so review page shows
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            user = await User.create({ telegramId: userId, verificationStatus: 'pending' });
         }
 
         res.json({ verificationStatus: user.verificationStatus });
     } catch (err) {
-        console.error('Server status check error:', err);
+        console.error('Status check error:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Root route to load your mini app frontend
+// Serve frontend files
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 const PORT = process.env.PORT || 3000;
