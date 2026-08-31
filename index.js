@@ -6,7 +6,6 @@ const app = express();
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Replace with your actual MongoDB connection string
 const MONGO_URI = process.env.MONGO_URI || 'YOUR_MONGODB_CONNECTION_STRING';
 
 mongoose.connect(MONGO_URI)
@@ -17,14 +16,14 @@ const userSchema = new mongoose.Schema({
     telegramId: { type: String, required: true, unique: true },
     verificationStatus: { 
         type: String, 
-        enum: ['pending', 'approved', 'rejected'], 
-        default: 'pending' 
+        enum: ['unsubmitted', 'pending', 'approved', 'rejected'], 
+        default: 'unsubmitted' // New users start here so they see the Landing page first!
     }
 });
 
 const User = mongoose.model('User', userSchema);
 
-// API to check verification status and route accordingly
+// API to check user status
 app.get('/api/user/status', async (req, res) => {
     try {
         const userId = req.query.userId || req.headers['x-user-id'];
@@ -34,9 +33,9 @@ app.get('/api/user/status', async (req, res) => {
 
         let user = await User.findOne({ telegramId: userId });
         
-        // If user doesn't exist yet, create them as pending so review page shows
+        // If it's a brand new user, create them with 'unsubmitted' status
         if (!user) {
-            user = await User.create({ telegramId: userId, verificationStatus: 'pending' });
+            user = await User.create({ telegramId: userId, verificationStatus: 'unsubmitted' });
         }
 
         res.json({ verificationStatus: user.verificationStatus });
@@ -46,7 +45,24 @@ app.get('/api/user/status', async (req, res) => {
     }
 });
 
-// Serve frontend files
+// API endpoint for when user submits their ID (switches them to 'pending')
+app.post('/api/user/submit-id', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'Missing user ID' });
+
+        await User.findOneAndUpdate(
+            { telegramId: userId },
+            { verificationStatus: 'pending' },
+            { upsert: true, new: true }
+        );
+
+        res.json({ success: true, verificationStatus: 'pending' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to submit ID' });
+    }
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
