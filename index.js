@@ -1,8 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
 const app = express();
 
 app.use(express.json());
+app.use(express.static(__dirname));
 
 // User Schema with strict verification statuses
 const userSchema = new mongoose.Schema({
@@ -36,7 +38,11 @@ app.get('/api/user/status', async (req, res) => {
     }
 });
 
-// Start server (update process.env.PORT if your app uses a specific configuration)
+// Root route to load your mini app frontend
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
