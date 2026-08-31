@@ -6,17 +6,18 @@
     <title>Once P2P</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; margin: 0; }
+        body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 40px; margin: 0; }
         .view { display: none; padding: 20px; }
         .active { display: block; }
-        button { background: #0088cc; color: #white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 15px; }
+        button { background: #0088cc; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 15px; }
+        #debug { margin-top: 50px; font-size: 12px; color: #888; border-top: 1px solid #333; padding-top: 10px; word-break: break-all; }
     </style>
 </head>
 <body>
 
     <div id="loading">Checking account status...</div>
 
-    <!-- 1. Landing / Registration Page (Shown if rejected or new) -->
+    <!-- 1. Landing / Registration Page (Default for new users) -->
     <div id="landing-view" class="view">
         <h2>Welcome to Once P2P</h2>
         <p id="error-msg" style="color: #ff4444;"></p>
@@ -24,57 +25,89 @@
         <button onclick="submitID()">Submit ID Documents</button>
     </div>
 
-    <!-- 2. Review Page (Shown if status is pending) -->
+    <!-- 2. Review Page (Shown ONLY if pending) -->
     <div id="review-view" class="view">
         <h2>Document Under Review</h2>
         <p>Your ID has been submitted successfully.</p>
         <p>Our admin team is reviewing your details. Please check back later.</p>
     </div>
 
-    <!-- 3. Marketplace Page (Shown if status is approved) -->
+    <!-- 3. Marketplace Page (Shown ONLY if approved) -->
     <div id="marketplace-view" class="view">
         <h2>P2P Marketplace</h2>
         <p>Your ID has been approved! You can now trade securely.</p>
     </div>
 
+    <!-- Debug Box -->
+    <div id="debug">Debug: Loading...</div>
+
     <script>
         async function initApp() {
             try {
-                // Get Telegram User ID safely
                 const tg = window.Telegram?.WebApp;
                 tg?.ready();
-                const telegramId = tg?.initDataUnsafe?.user?.id || localStorage.getItem('telegramId') || '123456789'; // fallback for testing
                 
-                localStorage.setItem('telegramId', telegramId);
+                // Read the active Telegram User ID directly from Telegram
+                const telegramId = tg?.initDataUnsafe?.user?.id?.toString();
 
-                // Fetch status from your backend index.js
+                if (!telegramId) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('landing-view').classList.add('active');
+                    document.getElementById('debug').innerText = 'Debug: Opened outside Telegram (No ID found)';
+                    return;
+                }
+
+                window.currentTelegramId = telegramId;
+
                 const response = await fetch(`/api/user/status?userId=${telegramId}`);
                 const data = await response.json();
 
                 document.getElementById('loading').style.display = 'none';
 
-                // Route according to database status
+                // Explicit route handling based strictly on database status
                 if (data.verificationStatus === 'approved') {
                     document.getElementById('marketplace-view').classList.add('active');
                 } else if (data.verificationStatus === 'rejected') {
                     document.getElementById('landing-view').classList.add('active');
-                    document.getElementById('error-msg').innerText = 'Your previous ID submission was rejected. Please resubmit.';
-                } else {
-                    // Default / Pending state -> Show Review Page
+                    document.getElementById('error-msg').innerText = 'Your previous ID was rejected. Please resubmit.';
+                } else if (data.verificationStatus === 'pending') {
                     document.getElementById('review-view').classList.add('active');
+                } else {
+                    // 'unsubmitted' or any new account defaults here to the landing page
+                    document.getElementById('landing-view').classList.add('active');
                 }
+
+                document.getElementById('debug').innerText = `Debug | User ID: ${telegramId} | Status: ${data.verificationStatus}`;
             } catch (err) {
                 console.error('Error loading state:', err);
-                document.getElementById('loading').innerText = 'Failed to load app status.';
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('landing-view').classList.add('active');
+                document.getElementById('debug').innerText = 'Debug Error: ' + err.message;
             }
         }
 
-        // Dummy function when user clicks submit button on landing page
         async function submitID() {
-            const telegramId = localStorage.getItem('telegramId');
-            // Call your backend submission route here if you have one, then reload
-            alert('ID submitted successfully! Redirecting to review screen.');
-            location.reload();
+            const telegramId = window.currentTelegramId;
+            if (!telegramId) {
+                alert('Telegram ID not detected.');
+                return;
+            }
+            try {
+                const res = await fetch('/api/user/submit-id', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: telegramId })
+                });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    alert('ID submitted successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to submit ID.');
+                }
+            } catch (e) {
+                alert('Network error during submission.');
+            }
         }
 
         initApp();
