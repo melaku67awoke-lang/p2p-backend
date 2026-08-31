@@ -17,13 +17,12 @@ const userSchema = new mongoose.Schema({
     verificationStatus: { 
         type: String, 
         enum: ['unsubmitted', 'pending', 'approved', 'rejected'], 
-        default: 'unsubmitted' // New users start here so they see the Landing page first!
+        default: 'unsubmitted' 
     }
 });
 
 const User = mongoose.model('User', userSchema);
 
-// API to check user status
 app.get('/api/user/status', async (req, res) => {
     try {
         const userId = req.query.userId || req.headers['x-user-id'];
@@ -32,8 +31,6 @@ app.get('/api/user/status', async (req, res) => {
         }
 
         let user = await User.findOne({ telegramId: userId });
-        
-        // If it's a brand new user, create them with 'unsubmitted' status
         if (!user) {
             user = await User.create({ telegramId: userId, verificationStatus: 'unsubmitted' });
         }
@@ -45,7 +42,6 @@ app.get('/api/user/status', async (req, res) => {
     }
 });
 
-// API endpoint for when user submits their ID (switches them to 'pending')
 app.post('/api/user/submit-id', async (req, res) => {
     try {
         const { userId } = req.body;
