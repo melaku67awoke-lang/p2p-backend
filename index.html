@@ -1,154 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Once P2P - Secure Digital Currency Gateway</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#10B981',
-            darkbg: '#0F172A',
-            cardbg: '#1E293B',
-          }
-        }
-      }
-    }
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Once P2P Marketplace</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-darkbg text-slate-100 font-sans min-h-screen flex flex-col justify-between">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-emerald-500 selection:text-slate-950">
 
-  <!-- Top Navigation Header -->
-  <header class="w-full bg-cardbg px-4 py-3 flex items-center justify-between border-b border-slate-700">
-    <div class="flex items-center space-x-2">
-      <div class="bg-primary text-darkbg font-bold w-8 h-8 rounded-lg flex items-center justify-center">P</div>
-      <span class="font-bold text-lg tracking-wide">Once <span class="text-primary">P2P</span></span>
-    </div>
-    <div id="badgeStatus" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-3 py-1 rounded-full">
-      Unverified
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="flex-grow p-4 max-w-md mx-auto w-full flex flex-col justify-center">
-
-    <!-- LANDING / REGISTRATION PAGE -->
-    <div id="landingPage" class="space-y-6">
-      <div class="text-center space-y-2">
-        <span class="bg-primary/10 text-primary border border-primary/20 text-xs font-medium px-3 py-1 rounded-full">
-          Exclusive Ethiopian P2P Community Gateway
-        </span>
-        <h1 class="text-3xl font-extrabold tracking-tight">
-          Secure, Private & Direct <span class="text-primary">Digital Asset Trading</span>
-        </h1>
-        <p class="text-sm text-slate-400">
-          Trade USDT safely with local payment methods through fully encrypted escrow protection. Entry requires verification.
-        </p>
-      </div>
-
-      <div class="space-y-3">
-        <div class="bg-cardbg p-4 rounded-xl border border-slate-700">
-          <div class="font-semibold text-sm mb-1 text-primary">🔒 Escrow Protected</div>
-          <p class="text-xs text-slate-400">Assets are safely locked until local bank transfers are fully confirmed by traders.</p>
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
+                <i class="fa-solid fa-bolt text-sm"></i>
+            </div>
+            <span class="font-bold text-lg tracking-tight">Once <span class="text-emerald-400">P2P</span></span>
         </div>
-        <div class="bg-cardbg p-4 rounded-xl border border-slate-700">
-          <div class="font-semibold text-sm mb-1 text-primary">⚡ Instant Local Pay</div>
-          <p class="text-xs text-slate-400">Seamlessly match with trusted local providers like CBE, Awash, Dashen, and Telebirr.</p>
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition-colors">
+                <i class="fa-solid fa-shield-halved text-xs text-emerald-400"></i>
+            </button>
+            <div id="user-avatar" class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 font-semibold text-sm">
+                U
+            </div>
         </div>
-      </div>
+    </header>
 
-      <button onclick="submitId()" class="w-full bg-primary hover:bg-emerald-600 text-darkbg font-bold py-3.5 rounded-xl transition shadow-lg shadow-emerald-900/20">
-        Submit ID for Verification
-      </button>
-    </div>
+    <!-- Main Container / View Switcher -->
+    <main class="flex-1 max-w-md w-full mx-auto p-4 flex flex-col justify-center">
 
-    <!-- ID VERIFICATION UNDER REVIEW PAGE -->
-    <div id="reviewScreen" class="hidden space-y-6 text-center">
-      <div class="bg-cardbg p-6 rounded-2xl border border-slate-700 space-y-4">
-        <div class="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto text-amber-400 text-2xl font-bold">
-          ⏳
-        </div>
-        
-        <div class="space-y-1">
-          <h2 class="text-xl font-bold">ID Verification Under Review</h2>
-          <p class="text-xs text-slate-400">
-            Your identity documents have been submitted securely. Our compliance team is cross-checking your legal details.
-          </p>
+        <!-- VIEW 1: Splash / Welcome Screen -->
+        <div id="view-splash" class="view-section space-y-6 text-center py-8">
+            <div class="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 rounded-3xl mx-auto flex items-center justify-center text-emerald-400 text-3xl shadow-lg shadow-emerald-950/50">
+                <i class="fa-solid fa-arrows-rotate animate-pulse"></i>
+            </div>
+            <div class="space-y-2">
+                <h1 class="text-2xl font-bold tracking-tight">Secure Crypto P2P</h1>
+                <p class="text-slate-400 text-sm max-w-xs mx-auto">Fast, secure, escrow-protected peer-to-peer trading directly inside Telegram.</p>
+            </div>
+            <div class="pt-6">
+                <button onclick="handleInitialNavigation()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 px-6 rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2">
+                    <span>Get Started</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </div>
         </div>
 
-        <div class="bg-darkbg p-4 rounded-xl text-left space-y-2 border border-slate-800 text-xs">
-          <div class="flex justify-between py-1 border-b border-slate-800">
-            <span class="text-slate-400">Status:</span>
-            <span class="text-amber-400 font-semibold">Pending Manual Audit</span>
-          </div>
-          <div class="flex justify-between py-1 border-b border-slate-800">
-            <span class="text-slate-400">Estimated Time:</span>
-            <span class="font-medium">1 - 24 Hours</span>
-          </div>
-          <div class="flex justify-between py-1">
-            <span class="text-slate-400">Security Check:</span>
-            <span class="text-primary font-medium">Encrypted & Queued</span>
-          </div>
+        <!-- VIEW 2: Registration Step 1 (Profile Setup) -->
+        <div id="view-reg1" class="view-section hidden space-y-6 py-4">
+            <div class="space-y-1">
+                <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Step 1 of 2</div>
+                <h2 class="text-xl font-bold">Account Profile</h2>
+                <p class="text-slate-400 text-sm">Choose your display handle and preferred currency.</p>
+            </div>
+            <form class="space-y-4" onsubmit="event.preventDefault(); switchView('view-reg2');">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-slate-300">Display Username</label>
+                    <input type="text" id="reg-username" required placeholder="Enter username" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-slate-300">Base Currency</label>
+                    <select id="reg-currency" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="ETB">ETB (Br)</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/20 mt-4">
+                    Continue to Verification
+                </button>
+            </form>
         </div>
 
-        <button onclick="resetDemo()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-xl transition text-xs border border-slate-700">
-          Reset Status (For Testing)
-        </button>
-      </div>
+        <!-- VIEW 3: Registration Step 2 (ID Verification) -->
+        <div id="view-reg2" class="view-section hidden space-y-6 py-4">
+            <div class="space-y-1">
+                <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Step 2 of 2</div>
+                <h2 class="text-xl font-bold">Identity Verification</h2>
+                <p class="text-slate-400 text-sm">Upload a valid identification document to unlock escrow limits.</p>
+            </div>
+            <form class="space-y-6" onsubmit="event.preventDefault(); completeRegistration();">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-slate-300">Document Type</label>
+                    <select class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors">
+                        <option value="national_id">National ID Card</option>
+                        <option value="passport">Passport</option>
+                        <option value="drivers_license">Driver's License</option>
+                    </select>
+                </div>
+                <div class="border-2 border-dashed border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-slate-900/50">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-emerald-400 mb-2"></i>
+                    <p class="text-sm font-medium text-slate-300">Tap to upload document photo</p>
+                    <p class="text-xs text-slate-500 mt-1">Supports JPG, PNG up to 10MB</p>
+                </div>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+                    Complete & Enter App
+                </button>
+            </form>
+        </div>
 
-      <p class="text-[11px] text-slate-500">
-        You will receive a notification in Telegram once your account verification status is updated.
-      </p>
-    </div>
+        <!-- VIEW 4: Main Application Dashboard -->
+        <div id="view-mainapp" class="view-section hidden space-y-4 py-2">
+            <!-- Balance Card -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none"></div>
+                <div class="text-xs text-slate-400 font-medium">Escrow Wallet Balance</div>
+                <div class="text-2xl font-black text-slate-100 mt-1">1,250.00 <span class="text-emerald-400 text-sm font-semibold">USDT</span></div>
+                <div class="flex items-center space-x-2 mt-4 pt-3 border-t border-slate-800/80">
+                    <button class="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 py-2 rounded-xl text-xs font-bold transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Deposit
+                    </button>
+                    <button class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl text-xs font-bold transition-colors">
+                        <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Withdraw
+                    </button>
+                </div>
+            </div>
 
-  </main>
+            <!-- Tabs / Filter Header -->
+            <div class="flex items-center justify-between pt-2">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Active Offers</h3>
+                <div class="flex space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+                    <button class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold transition-all">Buy</button>
+                    <button class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition-all">Sell</button>
+                </div>
+            </div>
 
-  <!-- Footer -->
-  <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-800">
-    Once P2P Secure Node • Encrypted Connection
-  </footer>
+            <!-- Offers List -->
+            <div class="space-y-3">
+                <!-- Offer Card 1 -->
+                <div class="bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 rounded-2xl p-4 transition-all">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-bold text-sm">CryptoKing99</span>
+                                <i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">142 trades • 98.6% completion</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-emerald-400 font-bold text-sm">1.00 USD</span>
+                            <div class="text-[10px] text-slate-400">Limit: $50 - $500</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-800/50 flex items-center justify-between">
+                        <span class="text-xs bg-slate-800 px-2.5 py-1 rounded-lg text-slate-300">Bank Transfer</span>
+                        <button class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-1.5 rounded-xl text-xs font-bold transition-all">
+                            Buy USDT
+                        </button>
+                    </div>
+                </div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+                <!-- Offer Card 2 -->
+                <div class="bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 rounded-2xl p-4 transition-all">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-bold text-sm">FastPay_Global</span>
+                                <i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">89 trades • 100% completion</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-emerald-400 font-bold text-sm">1.02 USD</span>
+                            <div class="text-[10px] text-slate-400">Limit: $10 - $200</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-800/50 flex items-center justify-between">
+                        <span class="text-xs bg-slate-800 px-2.5 py-1 rounded-lg text-slate-300">TeleBirr / CBE</span>
+                        <button class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-1.5 rounded-xl text-xs font-bold transition-all">
+                            Buy USDT
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    // Get the unique Telegram User ID (fallback to 'guest' if opened in a standard browser)
-    const userId = tg.initDataUnsafe?.user?.id || 'guest_user';
-    const storageKey = `once_p2p_submitted_${userId}`;
+    </main>
 
-    // Check saved status uniquely for this user on page load
-    window.addEventListener('DOMContentLoaded', () => {
-      const isSubmitted = localStorage.getItem(storageKey);
-      if (isSubmitted === 'true') {
-        showReviewScreen();
-      }
-    });
+    <!-- Bottom Navigation Bar (App Footer) -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-2.5 px-6 sticky bottom-0 z-50">
+        <div class="max-w-md mx-auto flex items-center justify-between text-slate-400">
+            <button onclick="switchView('view-mainapp')" class="flex flex-col items-center space-y-1 text-emerald-400">
+                <i class="fa-solid fa-store text-sm"></i>
+                <span class="text-[10px] font-medium">Market</span>
+            </button>
+            <button onclick="alert('Orders section')" class="flex flex-col items-center space-y-1 hover:text-slate-200 transition-colors">
+                <i class="fa-solid fa-file-invoice-dollar text-sm"></i>
+                <span class="text-[10px] font-medium">Orders</span>
+            </button>
+            <button onclick="alert('Wallet section')" class="flex flex-col items-center space-y-1 hover:text-slate-200 transition-colors">
+                <i class="fa-solid fa-wallet text-sm"></i>
+                <span class="text-[10px] font-medium">Wallet</span>
+            </button>
+            <button onclick="alert('Profile settings')" class="flex flex-col items-center space-y-1 hover:text-slate-200 transition-colors">
+                <i class="fa-solid fa-user-gear text-sm"></i>
+                <span class="text-[10px] font-medium">Profile</span>
+            </button>
+        </div>
+    </footer>
 
-    function submitId() {
-      // Save state tied strictly to this Telegram User ID
-      localStorage.setItem(storageKey, 'true');
-      showReviewScreen();
-    }
+    <!-- Client Script Router & App Logic -->
+    <script>
+        // Initialize Telegram Web App Context if available
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            if (tg.initDataUnsafe?.user) {
+                const user = tg.initDataUnsafe.user;
+                const usernameEl = document.getElementById('reg-username');
+                if (usernameEl && user.username) {
+                    usernameEl.value = user.username;
+                }
+                const avatarEl = document.getElementById('user-avatar');
+                if (avatarEl && user.first_name) {
+                    avatarEl.innerText = user.first_name.charAt(0).toUpperCase();
+                }
+            }
+        }
 
-    function showReviewScreen() {
-      document.getElementById('landingPage').classList.add('hidden');
-      document.getElementById('reviewScreen').classList.remove('hidden');
-      document.getElementById('badgeStatus').innerText = 'Review Pending';
-      document.getElementById('badgeStatus').className = 'bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-3 py-1 rounded-full';
-    }
+        // Switch View Utility
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.add('hidden');
+            });
+            const targetView = document.getElementById(viewId);
+            if (targetView) {
+                targetView.classList.remove('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-    function resetDemo() {
-      // Clears memory only for this specific user ID
-      localStorage.removeItem(storageKey);
-      document.getElementById('reviewScreen').classList.add('hidden');
-      document.getElementById('landingPage').classList.remove('hidden');
-      document.getElementById('badgeStatus').innerText = 'Unverified';
-      document.getElementById('badgeStatus').className = 'bg-slate-800 text-slate-400 border border-slate-700 text-xs font-semibold px-3 py-1 rounded-full';
-    }
-  </script>
+        // Navigation flow control based on local storage state
+        function handleInitialNavigation() {
+            const isRegistered = localStorage.getItem('once_p2p_registered');
+            if (isRegistered === 'true') {
+                switchView('view-mainapp');
+            } else {
+                switchView('view-reg1');
+            }
+        }
+
+        // Complete registration handler mapping to view-mainapp
+        function completeRegistration() {
+            localStorage.setItem('once_p2p_registered', 'true');
+            switchView('view-mainapp');
+        }
+
+        // Simple theme toggle placeholder
+        function toggleTheme() {
+            document.body.classList.toggle('bg-slate-900');
+        }
+
+        // On load check state
+        window.addEventListener('DOMContentLoaded', () => {
+            const isRegistered = localStorage.getItem('once_p2p_registered');
+            if (isRegistered === 'true') {
+                switchView('view-mainapp');
+            } else {
+                switchView('view-splash');
+            }
+        });
+    </script>
 </body>
 </html>
