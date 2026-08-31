@@ -25,9 +25,9 @@ const User = mongoose.model('User', userSchema);
 
 app.get('/api/user/status', async (req, res) => {
     try {
-        const userId = req.query.userId || req.headers['x-user-id'];
-        if (!userId) {
-            return res.status(400).json({ error: 'Missing user ID' });
+        const userId = req.query.userId;
+        if (!userId || userId === 'undefined' || userId === 'null') {
+            return res.status(400).json({ error: 'Missing or invalid user ID' });
         }
 
         let user = await User.findOne({ telegramId: userId });
