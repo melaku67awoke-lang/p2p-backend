@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(express.json());
 
-// MongoDB Connection (update your connection string as needed)
+// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/once-p2p', {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -24,12 +24,17 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// Root Route to prevent "Cannot GET /" errors
+app.get('/', (req, res) => {
+  res.json({ status: 'online', message: 'Once P2P Backend API is running.' });
+});
+
 // Middleware to Check Verification and Routing Status
 const enforceVerificationLock = async (req, res, next) => {
   try {
-    const { telegramId } = req.headers; // Or req.user depending on your auth setup
+    const telegramId = req.headers['telegramid'] || req.body.telegramId || req.query.telegramId;
     if (!telegramId) {
-      return res.status(401).json({ error: 'Unauthorized: Missing telegramId header' });
+      return res.status(401).json({ error: 'Unauthorized: Missing telegramId' });
     }
 
     let user = await User.findOne({ telegramId });
@@ -48,7 +53,6 @@ const enforceVerificationLock = async (req, res, next) => {
 app.get('/api/user/state', enforceVerificationLock, async (req, res) => {
   const { idStatus } = req.currentUser;
   
-  // Instruct frontend which view to render based strictly on DB status
   let currentView = 'marketplace';
   if (idStatus === 'submitted' || idStatus === 'pending') {
     currentView = 'review_pending';
@@ -72,7 +76,7 @@ app.post('/api/user/submit-id', enforceVerificationLock, async (req, res) => {
     const user = req.currentUser;
 
     user.idDocuments.push({ imageUrl });
-    user.idStatus = 'submitted'; // Lock status
+    user.idStatus = 'submitted'; // Lock status to review
     await user.save();
 
     res.json({
