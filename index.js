@@ -8,6 +8,10 @@ app.use(express.json());
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/once-p2p', {
   useNewUrlParser: true,
   useUnifiedTopology: true
+}).then(() => {
+  console.log('Connected to MongoDB');
+}).catch(err => {
+  console.error('MongoDB connection error:', err);
 });
 
 // User Schema with ID Verification Status
@@ -75,7 +79,9 @@ app.post('/api/user/submit-id', enforceVerificationLock, async (req, res) => {
     const { imageUrl } = req.body;
     const user = req.currentUser;
 
-    user.idDocuments.push({ imageUrl });
+    if (imageUrl) {
+      user.idDocuments.push({ imageUrl });
+    }
     user.idStatus = 'submitted'; // Lock status to review
     await user.save();
 
