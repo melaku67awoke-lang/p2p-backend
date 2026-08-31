@@ -5,7 +5,7 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 
-// Serve frontend static files from a folder named 'public'
+// Serve static frontend files from 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// Root Route fallback
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Middleware to Check Verification and Routing Status
 const enforceVerificationLock = async (req, res, next) => {
   try {
@@ -52,27 +57,28 @@ const enforceVerificationLock = async (req, res, next) => {
   }
 };
 
-// Route: Get current user state & determine frontend view
+// Route: Get current user state & determine persistent view
 app.get('/api/user/state', enforceVerificationLock, async (req, res) => {
   const { idStatus } = req.currentUser;
   
-  let currentView = 'marketplace';
+  let currentView = 'landing'; // default if unsubmitted or rejected
+  
   if (idStatus === 'submitted' || idStatus === 'pending') {
-    currentView = 'review_pending';
-  } else if (!idStatus || idStatus === 'unsubmitted' || idStatus === 'rejected') {
-    currentView = 'registration';
+    currentView = 'review_pending'; // Always display review page when reopened if pending/submitted
+  } else if (idStatus === 'approved') {
+    currentView = 'marketplace'; // Only approved users get marketplace
+  } else if (idStatus === 'rejected') {
+    currentView = 'landing'; // Rejected users go back to landing page
   }
 
   res.json({
     idStatus,
     currentView,
-    message: currentView === 'review_pending' 
-      ? 'Your ID documents are under admin review. Please wait until approved.' 
-      : 'Access granted according to status.'
+    message: `Current state locked to: ${currentView}`
   });
 });
 
-// Route: Submit ID Documents (Locks user into review state)
+// Route: Submit ID Documents (Permanently locks user to review screen on reopen)
 app.post('/api/user/submit-id', enforceVerificationLock, async (req, res) => {
   try {
     const { imageUrl } = req.body;
@@ -81,14 +87,14 @@ app.post('/api/user/submit-id', enforceVerificationLock, async (req, res) => {
     if (imageUrl) {
       user.idDocuments.push({ imageUrl });
     }
-    user.idStatus = 'submitted'; // Lock status to review
+    user.idStatus = 'submitted'; // Locks user into review state
     await user.save();
 
     res.json({
       success: true,
       idStatus: user.idStatus,
       currentView: 'review_pending',
-      message: 'ID submitted successfully. You are now locked to the review screen.'
+      message: 'ID submitted successfully. Locked to review page.'
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to submit ID documents' });
@@ -122,30 +128,23 @@ app.post('/api/admin/review-user', async (req, res) => {
   }
 });
 
-// Route: Marketplace (Protected: Blocks access if status is not approved)
+// Route: Marketplace (Strictly blocks unapproved users)
 app.get('/api/marketplace', enforceVerificationLock, (req, res) => {
   const { idStatus } = req.currentUser;
 
-  if (idStatus === 'submitted' || idStatus === 'pending') {
-    return res.status(403).json({
-      error: 'Access denied',
-      currentView: 'review_pending',
-      message: 'Your documents are pending review. Marketplace is locked.'
-    });
-  }
-
   if (idStatus !== 'approved') {
+    let targetView = (idStatus === 'submitted' || idStatus === 'pending') ? 'review_pending' : 'landing';
     return res.status(403).json({
       error: 'Access denied',
-      currentView: 'registration',
-      message: 'Please complete registration and submit your ID.'
+      currentView: targetView,
+      message: 'Marketplace is locked until admin approval.'
     });
   }
 
-  res.json({ success: true, data: 'Welcome to the Marketplace items list.' });
+  res.json({ success: true, data: 'Welcome to the Marketplace.' });
 });
 
-// Fallback to serve index.html for frontend routing
+// Fallback to index.html for frontend apps
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
