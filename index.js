@@ -72,17 +72,18 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
-// Admin: Update user status (approve / reject)
+// Admin: Update user status
 app.post('/api/admin/update-status', async (req, res) => {
     try {
         const { userId, status } = req.body;
-        if (!userId || !['approved', 'rejected', 'pending'].includes(status)) {
+        if (!userId || !['approved', 'rejected', 'pending', 'unsubmitted'].includes(status)) {
             return res.status(400).json({ error: 'Invalid parameters' });
         }
 
         await User.findOneAndUpdate(
             { telegramId: userId },
-            { verificationStatus: status }
+            { verificationStatus: status },
+            { upsert: true }
         );
 
         res.json({ success: true });
