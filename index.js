@@ -5,8 +5,8 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 
-// Serve static frontend files from 'public' folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static frontend files directly from the root folder
+app.use(express.static(__dirname));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/once-p2p', {
@@ -32,11 +32,6 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Root Route fallback
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 // Middleware to Check Verification and Routing Status
 const enforceVerificationLock = async (req, res, next) => {
   try {
@@ -61,14 +56,14 @@ const enforceVerificationLock = async (req, res, next) => {
 app.get('/api/user/state', enforceVerificationLock, async (req, res) => {
   const { idStatus } = req.currentUser;
   
-  let currentView = 'landing'; // default if unsubmitted or rejected
+  let currentView = 'landing';
   
   if (idStatus === 'submitted' || idStatus === 'pending') {
-    currentView = 'review_pending'; // Always display review page when reopened if pending/submitted
+    currentView = 'review_pending';
   } else if (idStatus === 'approved') {
-    currentView = 'marketplace'; // Only approved users get marketplace
+    currentView = 'marketplace';
   } else if (idStatus === 'rejected') {
-    currentView = 'landing'; // Rejected users go back to landing page
+    currentView = 'landing';
   }
 
   res.json({
@@ -78,7 +73,7 @@ app.get('/api/user/state', enforceVerificationLock, async (req, res) => {
   });
 });
 
-// Route: Submit ID Documents (Permanently locks user to review screen on reopen)
+// Route: Submit ID Documents
 app.post('/api/user/submit-id', enforceVerificationLock, async (req, res) => {
   try {
     const { imageUrl } = req.body;
@@ -87,7 +82,7 @@ app.post('/api/user/submit-id', enforceVerificationLock, async (req, res) => {
     if (imageUrl) {
       user.idDocuments.push({ imageUrl });
     }
-    user.idStatus = 'submitted'; // Locks user into review state
+    user.idStatus = 'submitted';
     await user.save();
 
     res.json({
@@ -104,7 +99,7 @@ app.post('/api/user/submit-id', enforceVerificationLock, async (req, res) => {
 // Route: Admin action to approve or reject user ID
 app.post('/api/admin/review-user', async (req, res) => {
   try {
-    const { telegramId, action } = req.body; // action: 'approve' or 'reject'
+    const { telegramId, action } = req.body;
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
 
     const user = await User.findOneAndUpdate(
@@ -128,7 +123,7 @@ app.post('/api/admin/review-user', async (req, res) => {
   }
 });
 
-// Route: Marketplace (Strictly blocks unapproved users)
+// Route: Marketplace
 app.get('/api/marketplace', enforceVerificationLock, (req, res) => {
   const { idStatus } = req.currentUser;
 
@@ -144,9 +139,14 @@ app.get('/api/marketplace', enforceVerificationLock, (req, res) => {
   res.json({ success: true, data: 'Welcome to the Marketplace.' });
 });
 
-// Fallback to index.html for frontend apps
+// Admin page route
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// Fallback to index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
