@@ -6,10 +6,11 @@ const app = express();
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const MONGO_URI = process.env.MONGO_URI || 'YOUR_MONGODB_CONNECTION_STRING';
+// Connected to your MongoDB Atlas cluster
+const MONGO_URI = 'mongodb+srv://melaku67awoke_db_user:207652Hab@cluster0.jphkwdb.mongodb.net/?appName=Cluster0';
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('Connected to MongoDB'))
+    .then(() => console.log('Connected to MongoDB successfully'))
     .catch(err => console.error('MongoDB connection error:', err));
 
 const userSchema = new mongoose.Schema({
@@ -23,11 +24,12 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// Get user status
 app.get('/api/user/status', async (req, res) => {
     try {
         const userId = req.query.userId;
         if (!userId || userId === 'undefined' || userId === 'null') {
-            return res.status(400).json({ error: 'Missing or invalid user ID' });
+            return res.status(400).json({ error: 'Invalid user ID' });
         }
 
         let user = await User.findOne({ telegramId: userId });
@@ -42,19 +44,21 @@ app.get('/api/user/status', async (req, res) => {
     }
 });
 
+// Submit ID (Changes status from unsubmitted/rejected to pending)
 app.post('/api/user/submit-id', async (req, res) => {
     try {
         const { userId } = req.body;
         if (!userId) return res.status(400).json({ error: 'Missing user ID' });
 
-        await User.findOneAndUpdate(
+        const updatedUser = await User.findOneAndUpdate(
             { telegramId: userId },
             { verificationStatus: 'pending' },
             { upsert: true, new: true }
         );
 
-        res.json({ success: true, verificationStatus: 'pending' });
+        res.json({ success: true, verificationStatus: updatedUser.verificationStatus });
     } catch (err) {
+        console.error('Submit error:', err);
         res.status(500).json({ error: 'Failed to submit ID' });
     }
 });
