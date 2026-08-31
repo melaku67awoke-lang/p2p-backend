@@ -32,7 +32,7 @@
             </div>
         </div>
         <div class="flex items-center space-x-2">
-            <span id="navStatusBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Review Pending</span>
+            <span id="navStatusBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/25">Landing</span>
         </div>
     </header>
 
@@ -48,9 +48,11 @@
 
     <!-- JavaScript Application Core -->
     <script>
-        // State Management with LocalStorage persistence for ID verification flow
+        // State Management with LocalStorage persistence matching exact views requested
         let appState = {
-            step: localStorage.getItem('once_p2p_step') || 'id_upload', // 'id_upload' or 'review_pending'
+            step: localStorage.getItem('once_p2p_step') || 'landing', // 'landing', 'register_1', 'id_verification', 'review_pending'
+            legalName: localStorage.getItem('once_p2p_legal_name') || '',
+            binanceId: localStorage.getItem('once_p2p_binance_id') || '',
             frontIdName: localStorage.getItem('once_p2p_front_name') || null,
             backIdName: localStorage.getItem('once_p2p_back_name') || null
         };
@@ -59,9 +61,52 @@
             const container = document.getElementById('appContainer');
             const badge = document.getElementById('navStatusBadge');
 
-            if (appState.step === 'id_upload') {
+            if (appState.step === 'landing') {
+                badge.innerText = 'Landing';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/25';
+                
+                container.innerHTML = `
+                    <div class="bg-cardbg border border-slate-800/80 rounded-2xl p-6 shadow-xl text-center space-y-5">
+                        <div class="w-16 h-16 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-inner shadow-primary/20">
+                            🚀
+                        </div>
+                        <div class="space-y-2">
+                            <h2 class="text-lg font-bold text-white tracking-wide">Welcome to Once P2P</h2>
+                            <p class="text-xs text-slate-400 leading-relaxed">Secure, fast, and decentralized peer-to-peer crypto trading built for local payment integration.</p>
+                        </div>
+                        <button onclick="goToRegister1()" class="w-full py-3.5 rounded-xl bg-primary hover:bg-emerald-600 text-slate-950 font-bold text-xs transition-all cursor-pointer shadow-lg shadow-emerald-500/20">
+                            Get Started
+                        </button>
+                    </div>
+                `;
+            } else if (appState.step === 'register_1') {
+                badge.innerText = 'Registration 1';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/25';
+
+                container.innerHTML = `
+                    <div class="bg-cardbg border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
+                        <div class="text-center space-y-1">
+                            <h2 class="text-sm font-bold text-white">Registration (Step 1)</h2>
+                            <p class="text-[11px] text-slate-400">Enter your official details to setup your trader profile.</p>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-300 block mb-1">Legal Full Name</label>
+                                <input type="text" id="regLegalName" value="${appState.legalName}" placeholder="e.g. Abebe Kebede" class="w-full bg-inputbg border border-slate-700/80 rounded-xl p-3 text-white focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-300 block mb-1">Binance UID</label>
+                                <input type="text" id="regBinanceId" value="${appState.binanceId}" placeholder="e.g. 98472910" class="w-full bg-inputbg border border-slate-700/80 rounded-xl p-3 text-white focus:outline-none focus:border-primary">
+                            </div>
+                        </div>
+                        <button onclick="submitRegister1()" class="w-full py-3 rounded-xl bg-primary hover:bg-emerald-600 text-slate-950 font-bold text-xs transition-all cursor-pointer mt-2 shadow-lg shadow-emerald-500/20">
+                            Proceed to ID Verification
+                        </button>
+                    </div>
+                `;
+            } else if (appState.step === 'id_verification') {
                 badge.innerText = 'Identity Verification';
-                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/25';
                 
                 container.innerHTML = `
                     <div class="bg-cardbg border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
@@ -102,7 +147,7 @@
                 checkFormValidity();
             } else if (appState.step === 'review_pending') {
                 badge.innerText = 'Review Pending';
-                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20';
+                badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25';
 
                 container.innerHTML = `
                     <div class="bg-cardbg border border-slate-800/80 rounded-2xl p-6 shadow-2xl text-center space-y-5">
@@ -142,6 +187,31 @@
             }
         }
 
+        function goToRegister1() {
+            appState.step = 'register_1';
+            localStorage.setItem('once_p2p_step', 'register_1');
+            render();
+        }
+
+        function submitRegister1() {
+            const legalName = document.getElementById('regLegalName').value.trim();
+            const binanceId = document.getElementById('regBinanceId').value.trim();
+
+            if (!legalName || !binanceId) {
+                alert('Please fill in both Legal Name and Binance ID.');
+                return;
+            }
+
+            appState.legalName = legalName;
+            appState.binanceId = binanceId;
+            localStorage.setItem('once_p2p_legal_name', legalName);
+            localStorage.setItem('once_p2p_binance_id', binanceId);
+
+            appState.step = 'id_verification';
+            localStorage.setItem('once_p2p_step', 'id_verification');
+            render();
+        }
+
         function handleFileSelect(side, event) {
             const file = event.target.files[0];
             if (file) {
@@ -179,12 +249,14 @@
         }
 
         function resetTestingState() {
-            appState.step = 'id_upload';
-            appState.frontIdName = null;
-            appState.backIdName = null;
-            localStorage.removeItem('once_p2p_step');
-            localStorage.removeItem('once_p2p_front_name');
-            localStorage.removeItem('once_p2p_back_name');
+            localStorage.clear();
+            appState = {
+                step: 'landing',
+                legalName: '',
+                binanceId: '',
+                frontIdName: null,
+                backIdName: null
+            };
             render();
         }
 
