@@ -29,7 +29,7 @@
       <span class="font-bold text-lg tracking-wide">Once <span class="text-primary">P2P</span></span>
     </div>
     <div id="badgeStatus" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-3 py-1 rounded-full">
-      Review Pending
+      Unverified
     </div>
   </header>
 
@@ -113,21 +113,24 @@
   </footer>
 
   <script>
-    // Initialize Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Check saved status on page load
+    // Get the unique Telegram User ID (fallback to 'guest' if opened in a standard browser)
+    const userId = tg.initDataUnsafe?.user?.id || 'guest_user';
+    const storageKey = `once_p2p_submitted_${userId}`;
+
+    // Check saved status uniquely for this user on page load
     window.addEventListener('DOMContentLoaded', () => {
-      const isSubmitted = localStorage.getItem('once_p2p_submitted');
+      const isSubmitted = localStorage.getItem(storageKey);
       if (isSubmitted === 'true') {
         showReviewScreen();
       }
     });
 
     function submitId() {
-      // Save state to local browser memory so it stays remembered when reopening
-      localStorage.setItem('once_p2p_submitted', 'true');
+      // Save state tied strictly to this Telegram User ID
+      localStorage.setItem(storageKey, 'true');
       showReviewScreen();
     }
 
@@ -135,14 +138,16 @@
       document.getElementById('landingPage').classList.add('hidden');
       document.getElementById('reviewScreen').classList.remove('hidden');
       document.getElementById('badgeStatus').innerText = 'Review Pending';
+      document.getElementById('badgeStatus').className = 'bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-3 py-1 rounded-full';
     }
 
     function resetDemo() {
-      // Clears memory so you can test the landing page again if needed
-      localStorage.removeItem('once_p2p_submitted');
+      // Clears memory only for this specific user ID
+      localStorage.removeItem(storageKey);
       document.getElementById('reviewScreen').classList.add('hidden');
       document.getElementById('landingPage').classList.remove('hidden');
       document.getElementById('badgeStatus').innerText = 'Unverified';
+      document.getElementById('badgeStatus').className = 'bg-slate-800 text-slate-400 border border-slate-700 text-xs font-semibold px-3 py-1 rounded-full';
     }
   </script>
 </body>
