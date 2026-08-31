@@ -39,7 +39,7 @@
             max-width: 400px;
             text-align: center;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            display: none; /* Hidden by default */
+            display: none;
         }
 
         .active-view {
@@ -178,7 +178,7 @@
 </head>
 <body>
 
-    <!-- 1. LANDING / HOME VIEW (New users start here) -->
+    <!-- 1. LANDING PAGE (Exact match to your initial screenshot before submission) -->
     <div class="container active-view" id="view-landing">
         <div class="logo-area">
             <div class="logo-box">P</div>
@@ -189,7 +189,7 @@
         <button class="btn-primary" onclick="switchView('view-register')">Register / Submit ID</button>
     </div>
 
-    <!-- 2. REGISTRATION / ID SUBMISSION VIEW -->
+    <!-- 2. ID SUBMISSION FORM VIEW -->
     <div class="container" id="view-register">
         <div class="logo-area">
             <div class="logo-box">P</div>
@@ -201,10 +201,10 @@
         <input type="text" id="fullName" class="form-input" placeholder="Full Legal Name">
         <input type="text" id="idNumber" class="form-input" placeholder="ID / Passport Number">
         
-        <button class="btn-primary" onclick="submitRegistration()">Submit for Review</button>
+        <button class="btn-primary" onclick="submitRegistration()">Submit ID Documents</button>
     </div>
 
-    <!-- 3. VERIFICATION PENDING VIEW -->
+    <!-- 3. VERIFICATION PENDING VIEW (Matches your exact layout design with restricted admin buttons) -->
     <div class="container" id="view-pending">
         <div class="logo-area">
             <div class="logo-box">P</div>
@@ -215,7 +215,7 @@
         <div class="icon-circle">⏱</div>
         
         <h2>Verification Pending</h2>
-        <p>Your ID documents and registration details have been successfully submitted. Our administration team is reviewing your information.</p>
+        <p>Your ID documents and registration details have been successfully submitted. Our administration team is reviewing your information for community security.</p>
 
         <div class="status-box">
             <div class="status-row">
@@ -228,7 +228,7 @@
             </div>
         </div>
 
-        <!-- HIDDEN FOR REGULAR USERS / VISIBLE ONLY TO ADMIN -->
+        <!-- ADMIN ONLY CONTROLS (Hidden for regular users, shown only to Admin ID) -->
         <div class="admin-section" id="admin-controls" style="display: none;">
             <div class="admin-title">SIMULATION ADMIN CONTROLS</div>
             <div class="btn-group">
@@ -238,7 +238,7 @@
         </div>
     </div>
 
-    <!-- 4. MARKETPLACE / MAIN APP VIEW (Shown after admin approval) -->
+    <!-- 4. MARKETPLACE / APP VIEW (Shown only after Admin clicks Accept) -->
     <div class="container" id="view-marketplace">
         <div class="logo-area" style="justify-content: center;">
             <div class="logo-box">P</div>
@@ -270,6 +270,7 @@
         }
 
         function checkUserState() {
+            // Check persistent storage to see where this specific user should be
             const savedStatus = localStorage.getItem('once_p2p_verification_status');
 
             if (savedStatus === 'approved') {
@@ -282,7 +283,7 @@
                 return;
             }
 
-            // Default state for brand new users
+            // CRITICAL FIX: Brand new users ALWAYS start directly on the Landing Page
             switchView('view-landing');
         }
 
@@ -295,7 +296,7 @@
                 return;
             }
 
-            // Save state as pending
+            // Move user to pending status and persist it
             localStorage.setItem('once_p2p_verification_status', 'pending');
             showPendingView();
         }
@@ -303,10 +304,12 @@
         function showPendingView() {
             switchView('view-pending');
 
-            // Check if current user is admin to conditionally show control buttons
+            // Check if current user matches the admin ID
             if (Number(currentUserId) === Number(ADMIN_TELEGRAM_ID)) {
+                // Show accept/reject buttons ONLY for the admin
                 document.getElementById('admin-controls').style.display = 'block';
             } else {
+                // Completely hide accept/reject buttons for normal users
                 document.getElementById('admin-controls').style.display = 'none';
             }
         }
